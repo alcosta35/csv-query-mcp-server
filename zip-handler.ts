@@ -1,3 +1,4 @@
+﻿/// <reference path="./globals.d.ts" />
 const yauzl = require('yauzl');
 const fs = require('fs').promises;
 const { createWriteStream } = require('fs');

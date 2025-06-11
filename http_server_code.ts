@@ -1,4 +1,5 @@
-﻿const express = require('express');
+﻿/// <reference path="./globals.d.ts" />
+const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const multer = require('multer');
@@ -335,3 +336,4 @@ class HTTPMCPServer {
 
 const server = new HTTPMCPServer();
 server.start().catch(console.error);
+

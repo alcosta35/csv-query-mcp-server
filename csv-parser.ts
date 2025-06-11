@@ -1,3 +1,4 @@
+﻿/// <reference path="./globals.d.ts" />
 const Papa = require('papaparse');
 const fs = require('fs').promises;
 
