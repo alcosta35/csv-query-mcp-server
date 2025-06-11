@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as yauzl from 'yauzl';
 import { promises as fs } from 'fs';
 import { createWriteStream } from 'fs';
@@ -19,19 +20,16 @@ export class ZipHandler {
           return;
         }
 
-        // Ensure extract directory exists
         fs.mkdir(extractPath, { recursive: true }).then(() => {
           zipfile.readEntry();
         }).catch(reject);
 
         zipfile.on('entry', (entry: any) => {
-          // Skip directories
           if (entry.fileName.endsWith('/')) {
             zipfile.readEntry();
             return;
           }
 
-          // Only extract CSV files
           if (!entry.fileName.toLowerCase().endsWith('.csv')) {
             zipfile.readEntry();
             return;

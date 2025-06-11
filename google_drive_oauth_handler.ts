@@ -1,9 +1,13 @@
-// google_drive_oauth_handler.ts
+cat > google_drive_oauth_handler.ts << 'EOF'
+/// <reference types="node" />
 import { google, drive_v3 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import { promises as fs } from 'fs';
 import { createReadStream, createWriteStream } from 'fs';
 import * as path from 'path';
+
+declare const process: any;
+declare const console: any;
 
 export class GoogleDriveOAuthHandler {
   private oauth2Client: OAuth2Client;
@@ -19,7 +23,6 @@ export class GoogleDriveOAuthHandler {
 
     this.folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
 
-    // Set credentials if refresh token is available
     if (process.env.GOOGLE_REFRESH_TOKEN) {
       this.oauth2Client.setCredentials({
         refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
@@ -29,9 +32,6 @@ export class GoogleDriveOAuthHandler {
     }
   }
 
-  /**
-   * Generate authorization URL for OAuth flow
-   */
   getAuthUrl(): string {
     const scopes = [
       'https://www.googleapis.com/auth/drive.file',
@@ -45,9 +45,6 @@ export class GoogleDriveOAuthHandler {
     });
   }
 
-  /**
-   * Exchange authorization code for tokens
-   */
   async getTokens(code: string): Promise<any> {
     try {
       const { tokens } = await this.oauth2Client.getToken(code);
@@ -61,16 +58,10 @@ export class GoogleDriveOAuthHandler {
     }
   }
 
-  /**
-   * Check if authenticated
-   */
   isAuthenticated(): boolean {
     return this.drive !== null;
   }
 
-  /**
-   * Upload a file to Google Drive
-   */
   async uploadFile(filePath: string, fileName: string): Promise<string> {
     if (!this.drive) {
       throw new Error('Not authenticated. Please complete OAuth flow first.');
@@ -104,9 +95,6 @@ export class GoogleDriveOAuthHandler {
     }
   }
 
-  /**
-   * Download a file from Google Drive
-   */
   async downloadFile(fileId: string, destinationPath: string): Promise<string> {
     if (!this.drive) {
       throw new Error('Not authenticated. Please complete OAuth flow first.');
@@ -129,11 +117,11 @@ export class GoogleDriveOAuthHandler {
             console.log(`File downloaded successfully to: ${destinationPath}`);
             resolve(destinationPath);
           })
-          .on('error', (err: Error) => {
+          .on('error', (err: any) => {
             reject(new Error(`Download stream error: ${err.message}`));
           })
           .pipe(dest)
-          .on('error', (err: Error) => {
+          .on('error', (err: any) => {
             reject(new Error(`Write stream error: ${err.message}`));
           });
       });
@@ -142,9 +130,6 @@ export class GoogleDriveOAuthHandler {
     }
   }
 
-  /**
-   * List files in the configured Google Drive folder
-   */
   async listFiles(): Promise<drive_v3.Schema$File[]> {
     if (!this.drive) {
       throw new Error('Not authenticated. Please complete OAuth flow first.');
@@ -168,9 +153,6 @@ export class GoogleDriveOAuthHandler {
     }
   }
 
-  /**
-   * Get file metadata
-   */
   async getFileMetadata(fileId: string): Promise<drive_v3.Schema$File> {
     if (!this.drive) {
       throw new Error('Not authenticated. Please complete OAuth flow first.');
@@ -188,9 +170,6 @@ export class GoogleDriveOAuthHandler {
     }
   }
 
-  /**
-   * Search for files by name
-   */
   async searchFiles(fileName: string): Promise<drive_v3.Schema$File[]> {
     if (!this.drive) {
       throw new Error('Not authenticated. Please complete OAuth flow first.');
@@ -215,3 +194,4 @@ export class GoogleDriveOAuthHandler {
     }
   }
 }
+EOF

@@ -1,3 +1,6 @@
+/// <reference types="node" />
+declare const process: any;
+declare const console: any;
 // http_server_code.ts
 import express from 'express';
 import cors from 'cors';
