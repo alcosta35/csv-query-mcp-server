@@ -9,7 +9,6 @@
     "skipLibCheck": true,
     "noImplicitAny": false,
     "allowJs": true,
-    "suppressImplicitAnyIndexErrors": true,
     "noImplicitReturns": false,
     "noImplicitThis": false,
     "lib": ["ES2020"],
