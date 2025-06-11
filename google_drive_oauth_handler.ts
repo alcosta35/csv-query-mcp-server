@@ -1,7 +1,7 @@
 // google_drive_oauth_handler.ts
 import { google, drive_v3 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
-import * as fs from 'fs/promises';
+import { promises as fs } from 'fs';
 import { createReadStream, createWriteStream } from 'fs';
 import * as path from 'path';
 
@@ -56,8 +56,8 @@ export class GoogleDriveOAuthHandler {
       this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
       
       return tokens;
-    } catch (error: any) {
-      throw new Error(`Failed to exchange code for tokens: ${error.message}`);
+    } catch (error) {
+      throw new Error(`Failed to exchange code for tokens: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -99,8 +99,8 @@ export class GoogleDriveOAuthHandler {
 
       console.log(`File uploaded successfully. File ID: ${response.data.id}`);
       return response.data.id;
-    } catch (error: any) {
-      throw new Error(`Failed to upload file to Google Drive: ${error.message}`);
+    } catch (error) {
+      throw new Error(`Failed to upload file to Google Drive: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -129,16 +129,16 @@ export class GoogleDriveOAuthHandler {
             console.log(`File downloaded successfully to: ${destinationPath}`);
             resolve(destinationPath);
           })
-          .on('error', (err: any) => {
+          .on('error', (err: Error) => {
             reject(new Error(`Download stream error: ${err.message}`));
           })
           .pipe(dest)
-          .on('error', (err: any) => {
+          .on('error', (err: Error) => {
             reject(new Error(`Write stream error: ${err.message}`));
           });
       });
-    } catch (error: any) {
-      throw new Error(`Failed to download file from Google Drive: ${error.message}`);
+    } catch (error) {
+      throw new Error(`Failed to download file from Google Drive: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -163,8 +163,8 @@ export class GoogleDriveOAuthHandler {
       });
 
       return response.data.files || [];
-    } catch (error: any) {
-      throw new Error(`Failed to list files from Google Drive: ${error.message}`);
+    } catch (error) {
+      throw new Error(`Failed to list files from Google Drive: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -183,8 +183,8 @@ export class GoogleDriveOAuthHandler {
       });
 
       return response.data;
-    } catch (error: any) {
-      throw new Error(`Failed to get file metadata: ${error.message}`);
+    } catch (error) {
+      throw new Error(`Failed to get file metadata: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -210,8 +210,8 @@ export class GoogleDriveOAuthHandler {
       });
 
       return response.data.files || [];
-    } catch (error: any) {
-      throw new Error(`Failed to search files in Google Drive: ${error.message}`);
+    } catch (error) {
+      throw new Error(`Failed to search files in Google Drive: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

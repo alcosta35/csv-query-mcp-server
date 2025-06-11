@@ -1,21 +1,19 @@
-// http-server.ts
+// http_server_code.ts
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import fs from 'fs/promises';
+import * as path from 'path';
+import { promises as fs } from 'fs';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { 
   CallToolRequestSchema, 
-  ListToolsRequestSchema,
-  McpError,
-  ErrorCode 
+  ListToolsRequestSchema
 } from '@modelcontextprotocol/sdk/types.js';
-import { CSVParser } from './csv-parser.js';
-import { ZipHandler } from './zip-handler.js';
-import { GoogleDriveOAuthHandler } from './google_drive_oauth_handler.js';
+import { CSVParser } from './csv-parser';
+import { ZipHandler } from './zip-handler';
+import { GoogleDriveOAuthHandler } from './google_drive_oauth_handler';
 
 class HTTPMCPServer {
   private app: express.Application;
@@ -84,7 +82,7 @@ class HTTPMCPServer {
 
   private setupRoutes() {
     // Health check endpoint (public)
-    this.app.get('/health', (req, res) => {
+    this.app.get('/health', (req: express.Request, res: express.Response) => {
       res.json({ 
         status: 'healthy', 
         authenticated: this.driveHandler.isAuthenticated(),
@@ -94,13 +92,13 @@ class HTTPMCPServer {
     });
 
     // OAuth flow initiation
-    this.app.get('/auth', (req, res) => {
+    this.app.get('/auth', (req: express.Request, res: express.Response) => {
       const authUrl = this.driveHandler.getAuthUrl();
       res.redirect(authUrl);
     });
 
     // OAuth callback
-    this.app.get('/auth/callback', async (req, res) => {
+    this.app.get('/auth/callback', async (req: express.Request, res: express.Response) => {
       try {
         const { code } = req.query;
         
@@ -135,7 +133,7 @@ class HTTPMCPServer {
     });
 
     // Check authentication status
-    this.app.get('/auth/status', this.authenticateToken.bind(this), (req, res) => {
+    this.app.get('/auth/status', this.authenticateToken.bind(this), (req: express.Request, res: express.Response) => {
       res.json({
         authenticated: this.driveHandler.isAuthenticated(),
         authUrl: this.driveHandler.isAuthenticated() ? null : this.driveHandler.getAuthUrl()
@@ -148,7 +146,7 @@ class HTTPMCPServer {
       limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
     });
 
-    this.app.post('/upload', upload.single('file'), async (req, res) => {
+    this.app.post('/upload', upload.single('file'), async (req: express.Request, res: express.Response) => {
       try {
         if (!req.file) {
           return res.status(400).json({ error: 'No file uploaded' });
@@ -177,7 +175,7 @@ class HTTPMCPServer {
     });
 
     // Download file from Google Drive
-    this.app.get('/download/:fileId', async (req, res) => {
+    this.app.get('/download/:fileId', async (req: express.Request, res: express.Response) => {
       try {
         const { fileId } = req.params;
         const tempPath = `/tmp/download-${uuidv4()}`;
@@ -201,7 +199,7 @@ class HTTPMCPServer {
     });
 
     // List files in Google Drive
-    this.app.get('/drive/files', async (req, res) => {
+    this.app.get('/drive/files', async (req: express.Request, res: express.Response) => {
       try {
         const files = await this.driveHandler.listFiles();
         res.json({ files });
@@ -215,7 +213,7 @@ class HTTPMCPServer {
     });
 
     // MCP protocol endpoint
-    this.app.post('/mcp', async (req, res) => {
+    this.app.post('/mcp', async (req: express.Request, res: express.Response) => {
       try {
         const request = req.body;
         let response;
@@ -228,10 +226,7 @@ class HTTPMCPServer {
             response = await this.handleCallTool(request.params);
             break;
           default:
-            throw new McpError(
-              ErrorCode.MethodNotFound,
-              `Method ${request.method} not found`
-            );
+            throw new Error(`Method ${request.method} not found`);
         }
 
         res.json(response);
@@ -387,19 +382,45 @@ class HTTPMCPServer {
   }
 
   private async handleListTools() {
-    const handler = this.server.getRequestHandler(ListToolsRequestSchema);
-    return await handler({
-      method: 'tools/list',
-      params: {}
-    } as any);
+    return {
+      tools: [
+        {
+          name: 'load_csv_from_drive',
+          description: 'Load CSV files from a Google Drive zip file',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              fileId: {
+                type: 'string',
+                description: 'Google Drive file ID of the zip file containing CSVs',
+              },
+            },
+            required: ['fileId'],
+          },
+        },
+        {
+          name: 'list_drive_files',
+          description: 'List available files in Google Drive',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+          },
+        }
+      ]
+    };
   }
 
   private async handleCallTool(params: any) {
-    const handler = this.server.getRequestHandler(CallToolRequestSchema);
-    return await handler({
-      method: 'tools/call',
-      params
-    } as any);
+    const { name, arguments: args } = params;
+
+    switch (name) {
+      case 'load_csv_from_drive':
+        return await this.handleLoadCSVFromDrive(args.fileId);
+      case 'list_drive_files':
+        return await this.handleListDriveFiles();
+      default:
+        throw new Error(`Unknown tool: ${name}`);
+    }
   }
 
   private async handleLoadCSVFromDrive(fileId: string) {
@@ -423,7 +444,7 @@ class HTTPMCPServer {
 
       // Clean up temp files
       await fs.unlink(tempZipPath).catch(() => {});
-      await fs.rm(extractPath, { recursive: true, force: true }).catch(() => {});
+      await fs.rmdir(extractPath, { recursive: true }).catch(() => {});
 
       return {
         content: [
@@ -441,7 +462,7 @@ class HTTPMCPServer {
   private async handleListDriveFiles() {
     try {
       const files = await this.driveHandler.listFiles();
-      const fileList = files.map(file => 
+      const fileList = files.map((file: any) => 
         `${file.name} (ID: ${file.id}) - ${file.size || 'Unknown size'} - Modified: ${file.modifiedTime || 'Unknown'}`
       ).join('\n');
 
