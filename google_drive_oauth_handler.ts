@@ -5,6 +5,10 @@ const { createReadStream, createWriteStream } = require('fs');
 const path = require('path');
 
 export class GoogleDriveOAuthHandler {
+  oauth2Client;
+  drive;
+  folderId;
+
   constructor() {
     this.oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,

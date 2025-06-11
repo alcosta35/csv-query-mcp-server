@@ -1,4 +1,3 @@
-cat > zip-handler.ts << 'EOF'
 const yauzl = require('yauzl');
 const fs = require('fs').promises;
 const { createWriteStream } = require('fs');
@@ -71,4 +70,3 @@ export class ZipHandler {
     });
   }
 }
-EOF
