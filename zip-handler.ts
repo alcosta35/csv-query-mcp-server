@@ -1,4 +1,3 @@
-cat > zip-handler.ts << 'EOF'
 import * as yauzl from 'yauzl';
 import { promises as fs } from 'fs';
 import { createWriteStream } from 'fs';
@@ -107,4 +106,3 @@ export class ZipHandler {
     });
   }
 }
-EOF
