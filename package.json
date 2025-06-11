@@ -1,26 +1,42 @@
 {
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0",
-    "googleapis": "^150.0.1",
-    "helmet": "^8.1.0",
-    "multer": "^2.0.1",
-    "uuid": "^11.1.0"
+  "name": "csv-query-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for CSV analysis with Google Drive integration",
+  "main": "dist/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
-  "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/multer": "^1.4.13",
-    "@types/uuid": "^10.0.0"
-  }
-{
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "start:prod": "NODE_ENV=production node dist/http-server.js",
     "dev": "ts-node index.ts",
     "dev:http": "ts-node http-server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "googleapis": "^150.0.1",
+    "google-auth-library": "^9.0.0",
+    "helmet": "^8.1.0",
+    "multer": "^2.0.1",
+    "papaparse": "^5.4.0",
+    "uuid": "^11.1.0",
+    "yauzl": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/multer": "^1.4.13",
+    "@types/node": "^22.0.0",
+    "@types/papaparse": "^5.3.0",
+    "@types/uuid": "^10.0.0",
+    "@types/yauzl": "^2.10.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
   }
-}
 }
