@@ -1,11 +1,8 @@
-/// <reference types="node" />
-import * as Papa from 'papaparse';
-import { promises as fs } from 'fs';
-
-declare const console: any;
+const Papa = require('papaparse');
+const fs = require('fs').promises;
 
 export class CSVParser {
-  async parseCSV(filePath: string): Promise<any[]> {
+  async parseCSV(filePath) {
     try {
       const fileContent = await fs.readFile(filePath, 'utf-8');
       
@@ -13,10 +10,10 @@ export class CSVParser {
         header: true,
         skipEmptyLines: true,
         dynamicTyping: true,
-        transformHeader: (header: string) => {
+        transformHeader: (header) => {
           return header.trim().toLowerCase().replace(/\s+/g, '_');
         },
-        transform: (value: string, header: string) => {
+        transform: (value, header) => {
           if (typeof value === 'string') {
             value = value.trim();
             
@@ -41,9 +38,9 @@ export class CSVParser {
         console.error('CSV parsing errors:', result.errors);
       }
 
-      return result.data as any[];
+      return result.data;
     } catch (error) {
-      throw new Error(`Failed to parse CSV file ${filePath}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to parse CSV file ${filePath}: ${error.message}`);
     }
   }
 }

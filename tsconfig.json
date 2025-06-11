@@ -1,24 +1,15 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
+    "target": "ES2020",
     "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "rootDir": "./",
     "strict": false,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "declaration": false,
-    "sourceMap": false,
     "noImplicitAny": false,
-    "allowJs": true,
-    "lib": ["ES2019"],
-    "typeRoots": ["./node_modules/@types"],
-    "types": ["node"]
+    "allowJs": true
   },
-  "include": ["**/*.ts"],
+  "include": ["*.ts"],
   "exclude": ["node_modules", "dist"]
 }

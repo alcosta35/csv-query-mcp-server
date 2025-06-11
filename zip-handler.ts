@@ -1,15 +1,15 @@
-/// <reference types="node" />
-import * as yauzl from 'yauzl';
-import { promises as fs } from 'fs';
-import { createWriteStream } from 'fs';
-import * as path from 'path';
+cat > zip-handler.ts << 'EOF'
+const yauzl = require('yauzl');
+const fs = require('fs').promises;
+const { createWriteStream } = require('fs');
+const path = require('path');
 
 export class ZipHandler {
-  async extractZip(zipPath: string, extractPath: string): Promise<string[]> {
+  async extractZip(zipPath, extractPath) {
     return new Promise((resolve, reject) => {
-      const extractedFiles: string[] = [];
+      const extractedFiles = [];
       
-      yauzl.open(zipPath, { lazyEntries: true }, (err: any, zipfile: any) => {
+      yauzl.open(zipPath, { lazyEntries: true }, (err, zipfile) => {
         if (err) {
           reject(new Error(`Failed to open zip file: ${err.message}`));
           return;
@@ -24,7 +24,7 @@ export class ZipHandler {
           zipfile.readEntry();
         }).catch(reject);
 
-        zipfile.on('entry', (entry: any) => {
+        zipfile.on('entry', (entry) => {
           if (entry.fileName.endsWith('/')) {
             zipfile.readEntry();
             return;
@@ -37,7 +37,7 @@ export class ZipHandler {
 
           const outputPath = path.join(extractPath, path.basename(entry.fileName));
 
-          zipfile.openReadStream(entry, (err: any, readStream: any) => {
+          zipfile.openReadStream(entry, (err, readStream) => {
             if (err) {
               reject(err);
               return;
@@ -70,37 +70,5 @@ export class ZipHandler {
       });
     });
   }
-
-  async listZipContents(zipPath: string): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      const files: string[] = [];
-      
-      yauzl.open(zipPath, { lazyEntries: true }, (err: any, zipfile: any) => {
-        if (err) {
-          reject(new Error(`Failed to open zip file: ${err.message}`));
-          return;
-        }
-
-        if (!zipfile) {
-          reject(new Error('Zip file is null'));
-          return;
-        }
-
-        zipfile.readEntry();
-
-        zipfile.on('entry', (entry: any) => {
-          if (!entry.fileName.endsWith('/')) {
-            files.push(entry.fileName);
-          }
-          zipfile.readEntry();
-        });
-
-        zipfile.on('end', () => {
-          resolve(files);
-        });
-
-        zipfile.on('error', reject);
-      });
-    });
-  }
 }
+EOF

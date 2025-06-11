@@ -1,19 +1,10 @@
-cat > google_drive_oauth_handler.ts << 'EOF'
-/// <reference types="node" />
-import { google, drive_v3 } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
-import { promises as fs } from 'fs';
-import { createReadStream, createWriteStream } from 'fs';
-import * as path from 'path';
-
-declare const process: any;
-declare const console: any;
+const { google } = require('googleapis');
+const { OAuth2Client } = require('google-auth-library');
+const fs = require('fs').promises;
+const { createReadStream, createWriteStream } = require('fs');
+const path = require('path');
 
 export class GoogleDriveOAuthHandler {
-  private oauth2Client: OAuth2Client;
-  private drive: drive_v3.Drive | null = null;
-  private folderId: string;
-
   constructor() {
     this.oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
@@ -32,7 +23,7 @@ export class GoogleDriveOAuthHandler {
     }
   }
 
-  getAuthUrl(): string {
+  getAuthUrl() {
     const scopes = [
       'https://www.googleapis.com/auth/drive.file',
       'https://www.googleapis.com/auth/drive.readonly'
@@ -45,7 +36,7 @@ export class GoogleDriveOAuthHandler {
     });
   }
 
-  async getTokens(code: string): Promise<any> {
+  async getTokens(code) {
     try {
       const { tokens } = await this.oauth2Client.getToken(code);
       this.oauth2Client.setCredentials(tokens);
@@ -54,21 +45,21 @@ export class GoogleDriveOAuthHandler {
       
       return tokens;
     } catch (error) {
-      throw new Error(`Failed to exchange code for tokens: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to exchange code for tokens: ${error.message}`);
     }
   }
 
-  isAuthenticated(): boolean {
+  isAuthenticated() {
     return this.drive !== null;
   }
 
-  async uploadFile(filePath: string, fileName: string): Promise<string> {
+  async uploadFile(filePath, fileName) {
     if (!this.drive) {
       throw new Error('Not authenticated. Please complete OAuth flow first.');
     }
 
     try {
-      const fileMetadata: drive_v3.Schema$File = {
+      const fileMetadata = {
         name: fileName,
         parents: this.folderId ? [this.folderId] : undefined,
       };
@@ -91,11 +82,11 @@ export class GoogleDriveOAuthHandler {
       console.log(`File uploaded successfully. File ID: ${response.data.id}`);
       return response.data.id;
     } catch (error) {
-      throw new Error(`Failed to upload file to Google Drive: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to upload file to Google Drive: ${error.message}`);
     }
   }
 
-  async downloadFile(fileId: string, destinationPath: string): Promise<string> {
+  async downloadFile(fileId, destinationPath) {
     if (!this.drive) {
       throw new Error('Not authenticated. Please complete OAuth flow first.');
     }
@@ -117,20 +108,20 @@ export class GoogleDriveOAuthHandler {
             console.log(`File downloaded successfully to: ${destinationPath}`);
             resolve(destinationPath);
           })
-          .on('error', (err: any) => {
+          .on('error', (err) => {
             reject(new Error(`Download stream error: ${err.message}`));
           })
           .pipe(dest)
-          .on('error', (err: any) => {
+          .on('error', (err) => {
             reject(new Error(`Write stream error: ${err.message}`));
           });
       });
     } catch (error) {
-      throw new Error(`Failed to download file from Google Drive: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to download file from Google Drive: ${error.message}`);
     }
   }
 
-  async listFiles(): Promise<drive_v3.Schema$File[]> {
+  async listFiles() {
     if (!this.drive) {
       throw new Error('Not authenticated. Please complete OAuth flow first.');
     }
@@ -149,49 +140,7 @@ export class GoogleDriveOAuthHandler {
 
       return response.data.files || [];
     } catch (error) {
-      throw new Error(`Failed to list files from Google Drive: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  async getFileMetadata(fileId: string): Promise<drive_v3.Schema$File> {
-    if (!this.drive) {
-      throw new Error('Not authenticated. Please complete OAuth flow first.');
-    }
-
-    try {
-      const response = await this.drive.files.get({
-        fileId: fileId,
-        fields: 'id, name, size, mimeType, modifiedTime, createdTime, parents',
-      });
-
-      return response.data;
-    } catch (error) {
-      throw new Error(`Failed to get file metadata: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  async searchFiles(fileName: string): Promise<drive_v3.Schema$File[]> {
-    if (!this.drive) {
-      throw new Error('Not authenticated. Please complete OAuth flow first.');
-    }
-
-    try {
-      const baseQuery = `name contains '${fileName}' and trashed=false`;
-      const query = this.folderId 
-        ? `${baseQuery} and '${this.folderId}' in parents`
-        : baseQuery;
-
-      const response = await this.drive.files.list({
-        q: query,
-        fields: 'files(id, name, size, mimeType, modifiedTime, createdTime)',
-        orderBy: 'modifiedTime desc',
-        pageSize: 50,
-      });
-
-      return response.data.files || [];
-    } catch (error) {
-      throw new Error(`Failed to search files in Google Drive: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to list files from Google Drive: ${error.message}`);
     }
   }
 }
-EOF
