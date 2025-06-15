@@ -209,25 +209,36 @@ class HTTPMCPServer {
       }
     });
 
+    // Add detailed logging to the MCP route handler
     this.app.post('/mcp', async (req, res) => {
+      console.log('=== MCP Request Received ===');
+      console.log('Method:', req.body.method);
+      console.log('Request ID:', req.body.id);
+      console.log('Full request body:', JSON.stringify(req.body, null, 2));
+      
       try {
         const request = req.body;
         let response;
 
         switch (request.method) {
           case 'tools/list':
+            console.log('Handling tools/list');
             response = await this.handleListTools();
             break;
           case 'tools/call':
+            console.log('Handling tools/call');
             response = await this.handleCallTool(request.params);
             break;
           case 'resources/list':
+            console.log('Handling resources/list');
             response = await this.handleListResources();
             break;
           case 'prompts/list':
+            console.log('Handling prompts/list');
             response = await this.handleListPrompts();
             break;
           default:
+            console.log(`Unknown method: ${request.method}`);
             return res.status(404).json({
               jsonrpc: "2.0",
               id: request.id,
@@ -238,22 +249,32 @@ class HTTPMCPServer {
             });
         }
 
-        res.json({
+        const finalResponse = {
           jsonrpc: "2.0",
           id: request.id,
           result: response
-        });
+        };
+        
+        console.log('Sending response:', JSON.stringify(finalResponse, null, 2));
+        res.json(finalResponse);
+        
       } catch (error) {
-        console.error('MCP error:', error);
-        res.status(500).json({
+        console.error('=== MCP ERROR ===');
+        console.error('Error details:', error);
+        console.error('Stack trace:', error.stack);
+        
+        const errorResponse = {
           jsonrpc: "2.0", 
-          id: req.body.id,
+          id: req.body?.id || null,
           error: {
             code: -32000,
             message: 'MCP request failed',
             data: error.message
           }
-        });
+        };
+        
+        console.log('Sending error response:', JSON.stringify(errorResponse, null, 2));
+        res.status(500).json(errorResponse);
       }
     });
   }
@@ -288,12 +309,14 @@ class HTTPMCPServer {
   }
 
   async handleListResources() {
+    console.log('handleListResources called');
     return {
       resources: []
     };
   }
 
   async handleListPrompts() {
+    console.log('handleListPrompts called');
     return {
       prompts: []
     };
