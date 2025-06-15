@@ -226,6 +226,14 @@ class HTTPMCPServer {
             console.log('✅ Handling prompts/list');
             response = { prompts: [] };
             break;
+          case 'notifications/initialized':
+            console.log('✅ Handling notifications/initialized');
+            // Notifications don't need a response, just acknowledge
+            return res.status(200).end();
+          case 'notifications/cancelled':
+            console.log('✅ Handling notifications/cancelled for request:', request.params?.requestId);
+            // Notifications don't need a response, just acknowledge
+            return res.status(200).end();
           default:
             console.log(`❌ Unknown method: ${request.method}`);
             return res.status(404).json({
