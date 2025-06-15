@@ -6,11 +6,6 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs').promises;
-const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
-const { 
-  CallToolRequestSchema, 
-  ListToolsRequestSchema
-} = require('@modelcontextprotocol/sdk/types.js');
 const { CSVParser } = require('./csv-parser');
 const { ZipHandler } = require('./zip-handler');
 const { GoogleDriveOAuthHandler } = require('./google_drive_oauth_handler');
@@ -24,7 +19,6 @@ class HTTPMCPServer {
   authToken;
 
   constructor() {
-    // Add this at the top of your HTTPMCPServer constructor
     console.log('=== MCP Server Starting ===');
     console.log('Environment:', process.env.NODE_ENV);
     
@@ -37,10 +31,7 @@ class HTTPMCPServer {
     this.zipHandler = new ZipHandler();
     this.driveHandler = new GoogleDriveOAuthHandler();
     
-    // Log auth status after initialization
     console.log('Google Drive Auth Status:', this.driveHandler.isAuthenticated());
-    
-    // Note: We handle MCP via HTTP routes, not via the SDK server
     console.log('MCP Server configured for HTTP-only mode');
 
     this.setupMiddleware();
@@ -57,7 +48,7 @@ class HTTPMCPServer {
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-    // Add global request logging
+    // Global request logging
     this.app.use((req, res, next) => {
       console.log(`🌐 ${req.method} ${req.path} - ${new Date().toISOString()}`);
       if (req.path === '/mcp') {
@@ -208,12 +199,11 @@ class HTTPMCPServer {
       }
     });
 
-    // Add detailed logging to the MCP route handler
+    // MCP endpoint with detailed logging
     this.app.post('/mcp', async (req, res) => {
       console.log('=== MCP Request Received ===');
-      console.log('Method:', req.body.method);
-      console.log('Request ID:', req.body.id);
-      console.log('Full request body:', JSON.stringify(req.body, null, 2));
+      console.log('Method:', req.body?.method);
+      console.log('Request ID:', req.body?.id);
       
       try {
         const request = req.body;
@@ -221,23 +211,23 @@ class HTTPMCPServer {
 
         switch (request.method) {
           case 'tools/list':
-            console.log('Handling tools/list');
+            console.log('✅ Handling tools/list');
             response = await this.handleListTools();
             break;
           case 'tools/call':
-            console.log('Handling tools/call');
+            console.log('✅ Handling tools/call with tool:', request.params?.name);
             response = await this.handleCallTool(request.params);
             break;
           case 'resources/list':
-            console.log('Handling resources/list');
-            response = await this.handleListResources();
+            console.log('✅ Handling resources/list');
+            response = { resources: [] };
             break;
           case 'prompts/list':
-            console.log('Handling prompts/list');
-            response = await this.handleListPrompts();
+            console.log('✅ Handling prompts/list');
+            response = { prompts: [] };
             break;
           default:
-            console.log(`Unknown method: ${request.method}`);
+            console.log(`❌ Unknown method: ${request.method}`);
             return res.status(404).json({
               jsonrpc: "2.0",
               id: request.id,
@@ -254,13 +244,12 @@ class HTTPMCPServer {
           result: response
         };
         
-        console.log('Sending response:', JSON.stringify(finalResponse, null, 2));
+        console.log('📤 Sending response for', request.method);
         res.json(finalResponse);
         
       } catch (error) {
         console.error('=== MCP ERROR ===');
-        console.error('Error details:', error);
-        console.error('Stack trace:', error.stack);
+        console.error('Error:', error.message);
         
         const errorResponse = {
           jsonrpc: "2.0", 
@@ -272,7 +261,6 @@ class HTTPMCPServer {
           }
         };
         
-        console.log('Sending error response:', JSON.stringify(errorResponse, null, 2));
         res.status(500).json(errorResponse);
       }
     });
@@ -307,22 +295,9 @@ class HTTPMCPServer {
     };
   }
 
-  async handleListResources() {
-    console.log('handleListResources called');
-    return {
-      resources: []
-    };
-  }
-
-  async handleListPrompts() {
-    console.log('handleListPrompts called');
-    return {
-      prompts: []
-    };
-  }
-
   async handleCallTool(params) {
     const { name, arguments: args } = params;
+    console.log(`🔧 Executing tool: ${name} with args:`, args);
 
     switch (name) {
       case 'load_csv_from_drive':
@@ -334,54 +309,44 @@ class HTTPMCPServer {
     }
   }
 
-  // FIXED METHOD - This is the updated version with proper error handling
   async handleLoadCSVFromDrive(fileId) {
     const tempZipPath = `/tmp/download-${uuidv4()}.zip`;
     const extractPath = `/tmp/extracted-${uuidv4()}`;
     
     try {
-      console.log(`Starting CSV load from Drive for file ID: ${fileId}`);
+      console.log(`📥 Starting CSV load from Drive for file ID: ${fileId}`);
       
-      // Download the file from Google Drive
-      console.log(`Downloading file to: ${tempZipPath}`);
       await this.driveHandler.downloadFile(fileId, tempZipPath);
-      
-      // Check if file was downloaded successfully
       const stats = await fs.stat(tempZipPath);
-      console.log(`Downloaded file size: ${stats.size} bytes`);
+      console.log(`📦 Downloaded file size: ${stats.size} bytes`);
       
       if (stats.size === 0) {
         throw new Error('Downloaded file is empty');
       }
 
-      // Extract CSV files from the zip
-      console.log(`Extracting to: ${extractPath}`);
       const csvFiles = await this.zipHandler.extractZip(tempZipPath, extractPath);
-      console.log(`Extracted ${csvFiles.length} CSV files:`, csvFiles);
+      console.log(`📂 Extracted ${csvFiles.length} CSV files`);
 
       if (csvFiles.length === 0) {
         throw new Error('No CSV files found in the zip archive');
       }
 
-      // Parse each CSV file
       const loadResults = [];
       let totalRows = 0;
       
       for (const csvPath of csvFiles) {
         try {
-          console.log(`Parsing CSV: ${csvPath}`);
           const data = await this.csvParser.parseCSV(csvPath);
           const filename = path.basename(csvPath);
           
-          // Store the data
           this.loadedData.set(filename, data);
           
-          console.log(`Loaded ${data.length} rows from ${filename}`);
+          console.log(`✅ Loaded ${data.length} rows from ${filename}`);
           loadResults.push(`${filename}: ${data.length} rows loaded`);
           totalRows += data.length;
           
         } catch (parseError) {
-          console.error(`Error parsing ${csvPath}:`, parseError);
+          console.error(`❌ Error parsing ${csvPath}:`, parseError.message);
           loadResults.push(`${path.basename(csvPath)}: Error parsing - ${parseError.message}`);
         }
       }
@@ -396,15 +361,14 @@ class HTTPMCPServer {
       };
 
     } catch (error) {
-      console.error('Error in handleLoadCSVFromDrive:', error);
+      console.error('❌ Error in handleLoadCSVFromDrive:', error.message);
       throw new Error(`Failed to load CSV files from Drive: ${error.message}`);
     } finally {
-      // Cleanup temporary files
       try {
-        await fs.unlink(tempZipPath).catch(() => console.log('Temp zip file already removed'));
-        await fs.rmdir(extractPath, { recursive: true }).catch(() => console.log('Extract directory already removed'));
+        await fs.unlink(tempZipPath).catch(() => {});
+        await fs.rmdir(extractPath, { recursive: true }).catch(() => {});
       } catch (cleanupError) {
-        console.warn('Cleanup error:', cleanupError.message);
+        console.warn('⚠️ Cleanup error:', cleanupError.message);
       }
     }
   }
