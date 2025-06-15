@@ -17,7 +17,6 @@ const { GoogleDriveOAuthHandler } = require('./google_drive_oauth_handler');
 
 class HTTPMCPServer {
   app;
-  server;
   csvParser;
   zipHandler;
   driveHandler;
@@ -41,17 +40,8 @@ class HTTPMCPServer {
     // Log auth status after initialization
     console.log('Google Drive Auth Status:', this.driveHandler.isAuthenticated());
     
-    this.server = new Server(
-      {
-        name: 'csv-query-mcp-http',
-        version: '1.0.0',
-      },
-      {
-        capabilities: {
-          tools: {},
-        },
-      }
-    );
+    // Note: We handle MCP via HTTP routes, not via the SDK server
+    console.log('MCP Server configured for HTTP-only mode');
 
     this.setupMiddleware();
     this.setupRoutes();
