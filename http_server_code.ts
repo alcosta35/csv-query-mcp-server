@@ -57,6 +57,15 @@ class HTTPMCPServer {
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+    // Add global request logging
+    this.app.use((req, res, next) => {
+      console.log(`🌐 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+      if (req.path === '/mcp') {
+        console.log('📨 MCP request body:', JSON.stringify(req.body, null, 2));
+      }
+      next();
+    });
+
     this.app.use('/mcp', this.authenticateToken.bind(this));
     this.app.use('/upload', this.authenticateToken.bind(this));
     this.app.use('/download', this.authenticateToken.bind(this));
