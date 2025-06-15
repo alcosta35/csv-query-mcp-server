@@ -221,16 +221,38 @@ class HTTPMCPServer {
           case 'tools/call':
             response = await this.handleCallTool(request.params);
             break;
+          case 'resources/list':
+            response = await this.handleListResources();
+            break;
+          case 'prompts/list':
+            response = await this.handleListPrompts();
+            break;
           default:
-            throw new Error(`Method ${request.method} not found`);
+            return res.status(404).json({
+              jsonrpc: "2.0",
+              id: request.id,
+              error: {
+                code: -32601,
+                message: `Method ${request.method} not found`
+              }
+            });
         }
 
-        res.json(response);
+        res.json({
+          jsonrpc: "2.0",
+          id: request.id,
+          result: response
+        });
       } catch (error) {
         console.error('MCP error:', error);
-        res.status(500).json({ 
-          error: 'MCP request failed',
-          details: error.message
+        res.status(500).json({
+          jsonrpc: "2.0", 
+          id: req.body.id,
+          error: {
+            code: -32000,
+            message: 'MCP request failed',
+            data: error.message
+          }
         });
       }
     });
@@ -262,6 +284,18 @@ class HTTPMCPServer {
           },
         }
       ]
+    };
+  }
+
+  async handleListResources() {
+    return {
+      resources: []
+    };
+  }
+
+  async handleListPrompts() {
+    return {
+      prompts: []
     };
   }
 
