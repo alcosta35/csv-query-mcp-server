@@ -9,7 +9,7 @@ export class ZipHandler {
     return new Promise((resolve, reject) => {
       const extractedFiles = [];
       
-      yauzl.open(zipPath, { lazyEntries: true }, (err, zipfile) => {
+      yauzl.open(zipPath, { lazyEntries: true }, async (err, zipfile) => {
         if (err) {
           reject(new Error(`Failed to open zip file: ${err.message}`));
           return;
@@ -20,26 +20,35 @@ export class ZipHandler {
           return;
         }
 
-        fs.mkdir(extractPath, { recursive: true }).then(() => {
+        try {
+          // Ensure extract directory exists
+          await fs.mkdir(extractPath, { recursive: true });
           zipfile.readEntry();
-        }).catch(reject);
+        } catch (error) {
+          reject(error);
+          return;
+        }
 
         zipfile.on('entry', (entry) => {
+          // Skip directories
           if (entry.fileName.endsWith('/')) {
             zipfile.readEntry();
             return;
           }
 
+          // Only process CSV files
           if (!entry.fileName.toLowerCase().endsWith('.csv')) {
             zipfile.readEntry();
             return;
           }
 
-          const outputPath = path.join(extractPath, path.basename(entry.fileName));
+          // Get just the filename without path to avoid directory traversal
+          const safeFileName = path.basename(entry.fileName);
+          const outputPath = path.join(extractPath, safeFileName);
 
           zipfile.openReadStream(entry, (err, readStream) => {
             if (err) {
-              reject(err);
+              reject(new Error(`Failed to open read stream for ${entry.fileName}: ${err.message}`));
               return;
             }
 
@@ -51,12 +60,23 @@ export class ZipHandler {
             const writeStream = createWriteStream(outputPath);
             
             readStream.on('end', () => {
+              writeStream.end();
+            });
+
+            writeStream.on('finish', () => {
               extractedFiles.push(outputPath);
               zipfile.readEntry();
             });
 
-            readStream.on('error', reject);
-            writeStream.on('error', reject);
+            readStream.on('error', (error) => {
+              writeStream.destroy();
+              reject(new Error(`Read stream error for ${entry.fileName}: ${error.message}`));
+            });
+
+            writeStream.on('error', (error) => {
+              readStream.destroy();
+              reject(new Error(`Write stream error for ${outputPath}: ${error.message}`));
+            });
 
             readStream.pipe(writeStream);
           });
@@ -66,7 +86,9 @@ export class ZipHandler {
           resolve(extractedFiles);
         });
 
-        zipfile.on('error', reject);
+        zipfile.on('error', (error) => {
+          reject(new Error(`Zip file error: ${error.message}`));
+        });
       });
     });
   }

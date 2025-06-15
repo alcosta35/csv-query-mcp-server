@@ -25,9 +25,21 @@ class HTTPMCPServer {
   authToken;
 
   constructor() {
+    // Add this at the top of your HTTPMCPServer constructor
+    console.log('=== MCP Server Starting ===');
+    console.log('Environment:', process.env.NODE_ENV);
+    
     this.app = express();
     this.authToken = process.env.MCP_AUTH_TOKEN || 'default-dev-token';
     this.loadedData = new Map();
+    
+    // Initialize handlers
+    this.csvParser = new CSVParser();
+    this.zipHandler = new ZipHandler();
+    this.driveHandler = new GoogleDriveOAuthHandler();
+    
+    // Log auth status after initialization
+    console.log('Google Drive Auth Status:', this.driveHandler.isAuthenticated());
     
     this.server = new Server(
       {
@@ -40,10 +52,6 @@ class HTTPMCPServer {
         },
       }
     );
-
-    this.csvParser = new CSVParser();
-    this.zipHandler = new ZipHandler();
-    this.driveHandler = new GoogleDriveOAuthHandler();
 
     this.setupMiddleware();
     this.setupRoutes();
@@ -270,35 +278,78 @@ class HTTPMCPServer {
     }
   }
 
+  // FIXED METHOD - This is the updated version with proper error handling
   async handleLoadCSVFromDrive(fileId) {
+    const tempZipPath = `/tmp/download-${uuidv4()}.zip`;
+    const extractPath = `/tmp/extracted-${uuidv4()}`;
+    
     try {
-      const tempZipPath = `/tmp/download-${uuidv4()}.zip`;
+      console.log(`Starting CSV load from Drive for file ID: ${fileId}`);
+      
+      // Download the file from Google Drive
+      console.log(`Downloading file to: ${tempZipPath}`);
       await this.driveHandler.downloadFile(fileId, tempZipPath);
-
-      const extractPath = `/tmp/extracted-${uuidv4()}`;
-      const csvFiles = await this.zipHandler.extractZip(tempZipPath, extractPath);
-
-      const loadResults = [];
-      for (const csvPath of csvFiles) {
-        const data = await this.csvParser.parseCSV(csvPath);
-        const filename = path.basename(csvPath);
-        this.loadedData.set(filename, data);
-        loadResults.push(`${filename}: ${data.length} rows loaded`);
+      
+      // Check if file was downloaded successfully
+      const stats = await fs.stat(tempZipPath);
+      console.log(`Downloaded file size: ${stats.size} bytes`);
+      
+      if (stats.size === 0) {
+        throw new Error('Downloaded file is empty');
       }
 
-      await fs.unlink(tempZipPath).catch(() => {});
-      await fs.rmdir(extractPath, { recursive: true }).catch(() => {});
+      // Extract CSV files from the zip
+      console.log(`Extracting to: ${extractPath}`);
+      const csvFiles = await this.zipHandler.extractZip(tempZipPath, extractPath);
+      console.log(`Extracted ${csvFiles.length} CSV files:`, csvFiles);
+
+      if (csvFiles.length === 0) {
+        throw new Error('No CSV files found in the zip archive');
+      }
+
+      // Parse each CSV file
+      const loadResults = [];
+      let totalRows = 0;
+      
+      for (const csvPath of csvFiles) {
+        try {
+          console.log(`Parsing CSV: ${csvPath}`);
+          const data = await this.csvParser.parseCSV(csvPath);
+          const filename = path.basename(csvPath);
+          
+          // Store the data
+          this.loadedData.set(filename, data);
+          
+          console.log(`Loaded ${data.length} rows from ${filename}`);
+          loadResults.push(`${filename}: ${data.length} rows loaded`);
+          totalRows += data.length;
+          
+        } catch (parseError) {
+          console.error(`Error parsing ${csvPath}:`, parseError);
+          loadResults.push(`${path.basename(csvPath)}: Error parsing - ${parseError.message}`);
+        }
+      }
 
       return {
         content: [
           {
             type: 'text',
-            text: `Successfully loaded ${csvFiles.length} CSV files from Google Drive:\n${loadResults.join('\n')}`,
+            text: `Successfully processed ${csvFiles.length} CSV files from Google Drive (Total: ${totalRows} rows):\n\n${loadResults.join('\n')}\n\nData is now available for analysis.`,
           },
         ],
       };
+
     } catch (error) {
+      console.error('Error in handleLoadCSVFromDrive:', error);
       throw new Error(`Failed to load CSV files from Drive: ${error.message}`);
+    } finally {
+      // Cleanup temporary files
+      try {
+        await fs.unlink(tempZipPath).catch(() => console.log('Temp zip file already removed'));
+        await fs.rmdir(extractPath, { recursive: true }).catch(() => console.log('Extract directory already removed'));
+      } catch (cleanupError) {
+        console.warn('Cleanup error:', cleanupError.message);
+      }
     }
   }
 
@@ -326,14 +377,13 @@ class HTTPMCPServer {
     const port = process.env.PORT || 3000;
     
     this.app.listen(port, () => {
-      console.log(` CSV Query MCP Server running on port ${port}`);
-      console.log(` Authentication required with token: ${this.authToken.substring(0, 10)}...`);
-      console.log(` Google Drive integration enabled`);
-      console.log(` Health check: http://localhost:${port}/health`);
+      console.log(`🚀 CSV Query MCP Server running on port ${port}`);
+      console.log(`🔐 Authentication required with token: ${this.authToken.substring(0, 10)}...`);
+      console.log(`📁 Google Drive integration enabled`);
+      console.log(`💚 Health check: http://localhost:${port}/health`);
     });
   }
 }
 
 const server = new HTTPMCPServer();
 server.start().catch(console.error);
-
