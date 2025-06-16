@@ -482,8 +482,8 @@ class HTTPMCPServer {
       case 'sum':
         if (!column) throw new Error('Column is required for sum operation');
         result = data.reduce((sum, row) => {
-          const val = parseFloat(row[column]) || 0;
-          return sum + val;
+          const val = parseFloat(String(row[column] || 0));
+          return sum + (isNaN(val) ? 0 : val);
         }, 0);
         break;
         
@@ -499,11 +499,11 @@ class HTTPMCPServer {
           [column]: key,
           count: groups[key].length,
           total_value: groups[key].reduce((sum, item) => {
-            const val = parseFloat(item.valor_total || item.valor || 0);
-            return sum + val;
+            const val = parseFloat(String(item.valor_total || item.valor || 0));
+            return sum + (isNaN(val) ? 0 : val);
           }, 0),
           items: groups[key].slice(0, 3) // Sample items
-        })).sort((a, b) => b.total_value - a.total_value);
+        })).sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
         break;
         
       case 'filter':
@@ -565,10 +565,10 @@ class HTTPMCPServer {
         const ufGroups = {};
         cabecalho.forEach(nf => {
           const uf = nf[ufColumn];
-          const valor = parseFloat(nf[valorColumn]) || 0;
+          const valor = parseFloat(String(nf[valorColumn] || 0));
           
           if (uf && !ufGroups[uf]) ufGroups[uf] = 0;
-          if (uf) ufGroups[uf] += valor;
+          if (uf && !isNaN(valor)) ufGroups[uf] += valor;
         });
         
         const sortedUFs = Object.entries(ufGroups)
@@ -634,8 +634,8 @@ class HTTPMCPServer {
         });
         
         const totalValue = categoryItems.reduce((sum, item) => {
-          const valor = parseFloat(item[valorItemColumn]) || 0;
-          return sum + valor;
+          const valor = parseFloat(String(item[valorItemColumn] || 0));
+          return sum + (isNaN(valor) ? 0 : valor);
         }, 0);
         
         result = {
