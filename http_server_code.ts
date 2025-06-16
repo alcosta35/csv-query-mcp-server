@@ -83,7 +83,8 @@ class HTTPMCPServer {
         status: 'healthy', 
         authenticated: this.driveHandler.isAuthenticated(),
         timestamp: new Date().toISOString(),
-        service: 'csv-query-mcp-server'
+        service: 'csv-query-mcp-server',
+        loadedTables: Array.from(this.loadedData.keys())
       });
     });
 
@@ -298,6 +299,56 @@ class HTTPMCPServer {
             type: 'object',
             properties: {},
           },
+        },
+        {
+          name: 'query_loaded_csv',
+          description: 'Query data from previously loaded CSV files',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              table: {
+                type: 'string',
+                description: 'Name of the CSV table to query (e.g., "202401_NFs_Cabecalho.csv", "202401_NFs_Itens.csv")',
+              },
+              operation: {
+                type: 'string',
+                enum: ['count', 'sum', 'group_by', 'filter', 'get_columns', 'sample', 'all'],
+                description: 'Type of operation to perform',
+              },
+              column: {
+                type: 'string',
+                description: 'Column name for operations that need it (sum, group_by, filter)',
+              },
+              value: {
+                type: 'string',
+                description: 'Value for filter operations',
+              },
+              limit: {
+                type: 'number',
+                description: 'Limit number of results (default: 100)',
+              }
+            },
+            required: ['table', 'operation'],
+          },
+        },
+        {
+          name: 'analyze_nf_data',
+          description: 'Perform specific analysis on Brazilian NF (Nota Fiscal) data',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              analysis_type: {
+                type: 'string',
+                enum: ['total_nfs', 'uf_values', 'internet_cities', 'category_values'],
+                description: 'Type of analysis to perform',
+              },
+              category: {
+                type: 'string',
+                description: 'Category name for category_values analysis (e.g., "Livros")',
+              }
+            },
+            required: ['analysis_type'],
+          },
         }
       ]
     };
@@ -312,6 +363,10 @@ class HTTPMCPServer {
         return await this.handleLoadCSVFromDrive(args.fileId);
       case 'list_drive_files':
         return await this.handleListDriveFiles();
+      case 'query_loaded_csv':
+        return await this.handleQueryLoadedCSV(args);
+      case 'analyze_nf_data':
+        return await this.handleAnalyzeNFData(args);
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
@@ -399,6 +454,232 @@ class HTTPMCPServer {
     } catch (error) {
       throw new Error(`Failed to list Drive files: ${error.message}`);
     }
+  }
+
+  async handleQueryLoadedCSV(args) {
+    const { table, operation, column, value, limit = 100 } = args;
+    
+    if (!this.loadedData.has(table)) {
+      throw new Error(`Table ${table} not found. Available tables: ${Array.from(this.loadedData.keys()).join(', ')}`);
+    }
+    
+    const data = this.loadedData.get(table);
+    let result;
+    
+    switch (operation) {
+      case 'count':
+        result = data.length;
+        break;
+        
+      case 'get_columns':
+        result = data.length > 0 ? Object.keys(data[0]) : [];
+        break;
+        
+      case 'sample':
+        result = data.slice(0, Math.min(limit, 10));
+        break;
+        
+      case 'sum':
+        if (!column) throw new Error('Column is required for sum operation');
+        result = data.reduce((sum, row) => {
+          const val = parseFloat(row[column]) || 0;
+          return sum + val;
+        }, 0);
+        break;
+        
+      case 'group_by':
+        if (!column) throw new Error('Column is required for group_by operation');
+        const groups = {};
+        data.forEach(row => {
+          const key = row[column];
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(row);
+        });
+        result = Object.keys(groups).map(key => ({
+          [column]: key,
+          count: groups[key].length,
+          total_value: groups[key].reduce((sum, item) => {
+            const val = parseFloat(item.valor_total || item.valor || 0);
+            return sum + val;
+          }, 0),
+          items: groups[key].slice(0, 3) // Sample items
+        })).sort((a, b) => b.total_value - a.total_value);
+        break;
+        
+      case 'filter':
+        if (!column || value === undefined) throw new Error('Column and value are required for filter operation');
+        result = data.filter(row => {
+          const rowValue = String(row[column] || '').toLowerCase();
+          const searchValue = String(value).toLowerCase();
+          return rowValue.includes(searchValue);
+        }).slice(0, limit);
+        break;
+        
+      case 'all':
+        result = data.slice(0, limit);
+        break;
+        
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Query result for ${table} (${operation}):\n\n${JSON.stringify(result, null, 2)}`,
+        },
+      ],
+    };
+  }
+
+  async handleAnalyzeNFData(args) {
+    const { analysis_type, category } = args;
+    
+    const cabecalho = this.loadedData.get('202401_NFs_Cabecalho.csv');
+    const itens = this.loadedData.get('202401_NFs_Itens.csv');
+    
+    if (!cabecalho) {
+      throw new Error('202401_NFs_Cabecalho.csv not loaded. Please load the data first using load_csv_from_drive.');
+    }
+    
+    let result;
+    
+    switch (analysis_type) {
+      case 'total_nfs':
+        result = {
+          total_notas_fiscais: cabecalho.length,
+          periodo: 'Janeiro 2024'
+        };
+        break;
+        
+      case 'uf_values':
+        // Find the correct UF column
+        const ufColumn = this.findColumn(cabecalho[0], ['uf_emitente', 'uf', 'uf emitente', 'estado']);
+        const valorColumn = this.findColumn(cabecalho[0], ['valor_total', 'valor', 'valor total', 'total']);
+        
+        if (!ufColumn || !valorColumn) {
+          throw new Error(`Required columns not found. Available columns: ${Object.keys(cabecalho[0]).join(', ')}`);
+        }
+        
+        const ufGroups = {};
+        cabecalho.forEach(nf => {
+          const uf = nf[ufColumn];
+          const valor = parseFloat(nf[valorColumn]) || 0;
+          
+          if (uf && !ufGroups[uf]) ufGroups[uf] = 0;
+          if (uf) ufGroups[uf] += valor;
+        });
+        
+        const sortedUFs = Object.entries(ufGroups)
+          .map(([uf, total]) => ({ uf, valor_total: total }))
+          .sort((a, b) => b.valor_total - a.valor_total);
+          
+        result = {
+          uf_com_maior_valor: sortedUFs[0],
+          ranking_completo: sortedUFs,
+          colunas_usadas: { uf: ufColumn, valor: valorColumn }
+        };
+        break;
+        
+      case 'internet_cities':
+        const internetColumn = this.findColumn(cabecalho[0], ['internet', 'operacao_internet', 'operação internet', 'via_internet']);
+        const cidadeColumn = this.findColumn(cabecalho[0], ['cidade_emitente', 'cidade', 'cidade emitente', 'municipio']);
+        
+        if (!internetColumn || !cidadeColumn) {
+          throw new Error(`Required columns not found. Available columns: ${Object.keys(cabecalho[0]).join(', ')}`);
+        }
+        
+        const internetOps = cabecalho.filter(nf => {
+          const internet = String(nf[internetColumn] || '').toLowerCase();
+          return internet === 's' || internet === 'sim' || internet === 'true' || internet === '1';
+        });
+        
+        const cityGroups = {};
+        internetOps.forEach(nf => {
+          const cidade = nf[cidadeColumn];
+          if (cidade && !cityGroups[cidade]) cityGroups[cidade] = 0;
+          if (cidade) cityGroups[cidade]++;
+        });
+        
+        const sortedCities = Object.entries(cityGroups)
+          .map(([cidade, operacoes]) => ({ cidade, operacoes_internet: operacoes }))
+          .sort((a, b) => b.operacoes_internet - a.operacoes_internet)
+          .slice(0, 2);
+          
+        result = {
+          duas_cidades_mais_operacoes_internet: sortedCities,
+          total_operacoes_internet: internetOps.length,
+          total_notas_fiscais: cabecalho.length,
+          colunas_usadas: { internet: internetColumn, cidade: cidadeColumn }
+        };
+        break;
+        
+      case 'category_values':
+        if (!itens) {
+          throw new Error('202401_NFs_Itens.csv not loaded. Cannot analyze category values.');
+        }
+        
+        const categoryFilter = category || 'Livros';
+        const descColumn = this.findColumn(itens[0], ['descricao', 'produto', 'item', 'categoria']);
+        const valorItemColumn = this.findColumn(itens[0], ['valor', 'valor_item', 'valor item', 'preco']);
+        
+        if (!descColumn || !valorItemColumn) {
+          throw new Error(`Required columns not found. Available columns: ${Object.keys(itens[0]).join(', ')}`);
+        }
+        
+        const categoryItems = itens.filter(item => {
+          const desc = String(item[descColumn] || '').toLowerCase();
+          return desc.includes(categoryFilter.toLowerCase());
+        });
+        
+        const totalValue = categoryItems.reduce((sum, item) => {
+          const valor = parseFloat(item[valorItemColumn]) || 0;
+          return sum + valor;
+        }, 0);
+        
+        result = {
+          categoria: categoryFilter,
+          total_valor: totalValue,
+          quantidade_itens: categoryItems.length,
+          itens_encontrados: categoryItems.slice(0, 5).map(item => ({
+            descricao: item[descColumn],
+            valor: item[valorItemColumn]
+          })),
+          colunas_usadas: { descricao: descColumn, valor: valorItemColumn }
+        };
+        break;
+        
+      default:
+        throw new Error(`Unknown analysis type: ${analysis_type}`);
+    }
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Análise NF (${analysis_type}):\n\n${JSON.stringify(result, null, 2)}`,
+        },
+      ],
+    };
+  }
+
+  // Helper method to find column names with variations
+  findColumn(row, possibleNames) {
+    const keys = Object.keys(row);
+    for (const name of possibleNames) {
+      // Try exact match first
+      if (keys.includes(name)) return name;
+      
+      // Try case-insensitive match
+      const found = keys.find(key => key.toLowerCase() === name.toLowerCase());
+      if (found) return found;
+      
+      // Try partial match
+      const partial = keys.find(key => key.toLowerCase().includes(name.toLowerCase()));
+      if (partial) return partial;
+    }
+    return null;
   }
 
   async start() {
