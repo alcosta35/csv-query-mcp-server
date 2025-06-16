@@ -11,6 +11,8 @@
     "allowJs": true,
     "noImplicitReturns": false,
     "noImplicitThis": false,
+    "noStrictGenericChecks": true,
+    "suppressImplicitAnyIndexErrors": true,
     "lib": ["ES2020"],
     "typeRoots": ["./node_modules/@types"],
     "types": []

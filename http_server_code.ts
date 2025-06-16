@@ -11,12 +11,12 @@ const { ZipHandler } = require('./zip-handler');
 const { GoogleDriveOAuthHandler } = require('./google_drive_oauth_handler');
 
 class HTTPMCPServer {
-  app;
-  csvParser;
-  zipHandler;
-  driveHandler;
-  loadedData;
-  authToken;
+  app: any;
+  csvParser: any;
+  zipHandler: any;
+  driveHandler: any;
+  loadedData: Map<string, any[]>;
+  authToken: string;
 
   constructor() {
     console.log('=== MCP Server Starting ===');
@@ -49,7 +49,7 @@ class HTTPMCPServer {
     this.app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
     // Global request logging
-    this.app.use((req, res, next) => {
+    this.app.use((req: any, res: any, next: any) => {
       console.log(`🌐 ${req.method} ${req.path} - ${new Date().toISOString()}`);
       if (req.path === '/mcp') {
         console.log('📨 MCP request body:', JSON.stringify(req.body, null, 2));
@@ -62,7 +62,7 @@ class HTTPMCPServer {
     this.app.use('/download', this.authenticateToken.bind(this));
   }
 
-  authenticateToken(req, res, next) {
+  authenticateToken(req: any, res: any, next: any) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -78,7 +78,7 @@ class HTTPMCPServer {
   }
 
   setupRoutes() {
-    this.app.get('/health', (req, res) => {
+    this.app.get('/health', (req: any, res: any) => {
       res.json({ 
         status: 'healthy', 
         authenticated: this.driveHandler.isAuthenticated(),
@@ -88,12 +88,12 @@ class HTTPMCPServer {
       });
     });
 
-    this.app.get('/auth', (req, res) => {
+    this.app.get('/auth', (req: any, res: any) => {
       const authUrl = this.driveHandler.getAuthUrl();
       res.redirect(authUrl);
     });
 
-    this.app.get('/auth/callback', async (req, res) => {
+    this.app.get('/auth/callback', async (req: any, res: any) => {
       try {
         const { code } = req.query;
         
@@ -120,13 +120,13 @@ class HTTPMCPServer {
           </ol>
           <p><a href="/health">Check server status</a></p>
         `);
-      } catch (error) {
+      } catch (error: any) {
         console.error('OAuth callback error:', error);
         res.status(500).send('Authorization failed: ' + error.message);
       }
     });
 
-    this.app.get('/auth/status', this.authenticateToken.bind(this), (req, res) => {
+    this.app.get('/auth/status', this.authenticateToken.bind(this), (req: any, res: any) => {
       res.json({
         authenticated: this.driveHandler.isAuthenticated(),
         authUrl: this.driveHandler.isAuthenticated() ? null : this.driveHandler.getAuthUrl()
@@ -138,7 +138,7 @@ class HTTPMCPServer {
       limits: { fileSize: 100 * 1024 * 1024 }
     });
 
-    this.app.post('/upload', upload.single('file'), async (req, res) => {
+    this.app.post('/upload', upload.single('file'), async (req: any, res: any) => {
       try {
         if (!req.file) {
           return res.status(400).json({ error: 'No file uploaded' });
@@ -156,7 +156,7 @@ class HTTPMCPServer {
           fileId,
           message: 'File uploaded to Google Drive successfully'
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Upload error:', error);
         res.status(500).json({ 
           error: 'Failed to upload file',
@@ -165,20 +165,20 @@ class HTTPMCPServer {
       }
     });
 
-    this.app.get('/download/:fileId', async (req, res) => {
+    this.app.get('/download/:fileId', async (req: any, res: any) => {
       try {
         const { fileId } = req.params;
         const tempPath = `/tmp/download-${uuidv4()}`;
         
         const filePath = await this.driveHandler.downloadFile(fileId, tempPath);
         
-        res.download(filePath, (err) => {
+        res.download(filePath, (err: any) => {
           fs.unlink(filePath).catch(() => {});
           if (err) {
             console.error('Download error:', err);
           }
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Download error:', error);
         res.status(500).json({ 
           error: 'Failed to download file',
@@ -187,11 +187,11 @@ class HTTPMCPServer {
       }
     });
 
-    this.app.get('/drive/files', async (req, res) => {
+    this.app.get('/drive/files', async (req: any, res: any) => {
       try {
         const files = await this.driveHandler.listFiles();
         res.json({ files });
-      } catch (error) {
+      } catch (error: any) {
         console.error('List files error:', error);
         res.status(500).json({ 
           error: 'Failed to list files',
@@ -201,7 +201,7 @@ class HTTPMCPServer {
     });
 
     // MCP endpoint with detailed logging
-    this.app.post('/mcp', async (req, res) => {
+    this.app.post('/mcp', async (req: any, res: any) => {
       console.log('=== MCP Request Received ===');
       console.log('Method:', req.body?.method);
       console.log('Request ID:', req.body?.id);
@@ -256,7 +256,7 @@ class HTTPMCPServer {
         console.log('📤 Sending response for', request.method);
         res.json(finalResponse);
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('=== MCP ERROR ===');
         console.error('Error:', error.message);
         
@@ -354,7 +354,7 @@ class HTTPMCPServer {
     };
   }
 
-  async handleCallTool(params) {
+  async handleCallTool(params: any) {
     const { name, arguments: args } = params;
     console.log(`🔧 Executing tool: ${name} with args:`, args);
 
@@ -372,7 +372,7 @@ class HTTPMCPServer {
     }
   }
 
-  async handleLoadCSVFromDrive(fileId) {
+  async handleLoadCSVFromDrive(fileId: string) {
     const tempZipPath = `/tmp/download-${uuidv4()}.zip`;
     const extractPath = `/tmp/extracted-${uuidv4()}`;
     
@@ -394,7 +394,7 @@ class HTTPMCPServer {
         throw new Error('No CSV files found in the zip archive');
       }
 
-      const loadResults = [];
+      const loadResults: string[] = [];
       let totalRows = 0;
       
       for (const csvPath of csvFiles) {
@@ -408,7 +408,7 @@ class HTTPMCPServer {
           loadResults.push(`${filename}: ${data.length} rows loaded`);
           totalRows += data.length;
           
-        } catch (parseError) {
+        } catch (parseError: any) {
           console.error(`❌ Error parsing ${csvPath}:`, parseError.message);
           loadResults.push(`${path.basename(csvPath)}: Error parsing - ${parseError.message}`);
         }
@@ -423,14 +423,14 @@ class HTTPMCPServer {
         ],
       };
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error in handleLoadCSVFromDrive:', error.message);
       throw new Error(`Failed to load CSV files from Drive: ${error.message}`);
     } finally {
       try {
         await fs.unlink(tempZipPath).catch(() => {});
         await fs.rmdir(extractPath, { recursive: true }).catch(() => {});
-      } catch (cleanupError) {
+      } catch (cleanupError: any) {
         console.warn('⚠️ Cleanup error:', cleanupError.message);
       }
     }
@@ -439,7 +439,7 @@ class HTTPMCPServer {
   async handleListDriveFiles() {
     try {
       const files = await this.driveHandler.listFiles();
-      const fileList = files.map((file) => 
+      const fileList = files.map((file: any) => 
         `${file.name} (ID: ${file.id}) - ${file.size || 'Unknown size'} - Modified: ${file.modifiedTime || 'Unknown'}`
       ).join('\n');
 
@@ -451,12 +451,12 @@ class HTTPMCPServer {
           },
         ],
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Failed to list Drive files: ${error.message}`);
     }
   }
 
-  async handleQueryLoadedCSV(args) {
+  async handleQueryLoadedCSV(args: any) {
     const { table, operation, column, value, limit = 100 } = args;
     
     if (!this.loadedData.has(table)) {
@@ -464,24 +464,24 @@ class HTTPMCPServer {
     }
     
     const data = this.loadedData.get(table);
-    let result;
+    let result: any;
     
     switch (operation) {
       case 'count':
-        result = data.length;
+        result = data?.length || 0;
         break;
         
       case 'get_columns':
-        result = data.length > 0 ? Object.keys(data[0]) : [];
+        result = (data && data.length > 0) ? Object.keys(data[0]) : [];
         break;
         
       case 'sample':
-        result = data.slice(0, Math.min(limit, 10));
+        result = data?.slice(0, Math.min(limit, 10)) || [];
         break;
         
       case 'sum':
         if (!column) throw new Error('Column is required for sum operation');
-        result = data.reduce((sum, row) => {
+        result = (data || []).reduce((sum: number, row: any) => {
           const val = parseFloat(String(row[column] || 0));
           return sum + (isNaN(val) ? 0 : val);
         }, 0);
@@ -489,26 +489,29 @@ class HTTPMCPServer {
         
       case 'group_by':
         if (!column) throw new Error('Column is required for group_by operation');
-        const groups = {};
-        data.forEach(row => {
+        const groups: any = {};
+        (data || []).forEach((row: any) => {
           const key = row[column];
           if (!groups[key]) groups[key] = [];
           groups[key].push(row);
         });
-        result = Object.keys(groups).map(key => ({
-          [column]: key,
-          count: groups[key].length,
-          total_value: groups[key].reduce((sum, item) => {
+        result = Object.keys(groups).map(key => {
+          const totalValue = groups[key].reduce((sum: number, item: any) => {
             const val = parseFloat(String(item.valor_total || item.valor || 0));
             return sum + (isNaN(val) ? 0 : val);
-          }, 0),
-          items: groups[key].slice(0, 3) // Sample items
-        })).sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
+          }, 0);
+          return {
+            [column]: key,
+            count: groups[key].length,
+            total_value: totalValue,
+            items: groups[key].slice(0, 3)
+          };
+        }).sort((a: any, b: any) => (b.total_value || 0) - (a.total_value || 0));
         break;
         
       case 'filter':
         if (!column || value === undefined) throw new Error('Column and value are required for filter operation');
-        result = data.filter(row => {
+        result = (data || []).filter((row: any) => {
           const rowValue = String(row[column] || '').toLowerCase();
           const searchValue = String(value).toLowerCase();
           return rowValue.includes(searchValue);
@@ -516,7 +519,7 @@ class HTTPMCPServer {
         break;
         
       case 'all':
-        result = data.slice(0, limit);
+        result = (data || []).slice(0, limit);
         break;
         
       default:
@@ -533,7 +536,7 @@ class HTTPMCPServer {
     };
   }
 
-  async handleAnalyzeNFData(args) {
+  async handleAnalyzeNFData(args: any) {
     const { analysis_type, category } = args;
     
     const cabecalho = this.loadedData.get('202401_NFs_Cabecalho.csv');
@@ -543,7 +546,7 @@ class HTTPMCPServer {
       throw new Error('202401_NFs_Cabecalho.csv not loaded. Please load the data first using load_csv_from_drive.');
     }
     
-    let result;
+    let result: any;
     
     switch (analysis_type) {
       case 'total_nfs':
@@ -562,18 +565,18 @@ class HTTPMCPServer {
           throw new Error(`Required columns not found. Available columns: ${Object.keys(cabecalho[0]).join(', ')}`);
         }
         
-        const ufGroups = {};
-        cabecalho.forEach(nf => {
+        const ufGroups: any = {};
+        cabecalho.forEach((nf: any) => {
           const uf = nf[ufColumn];
           const valor = parseFloat(String(nf[valorColumn] || 0));
           
           if (uf && !ufGroups[uf]) ufGroups[uf] = 0;
-          if (uf && !isNaN(valor)) ufGroups[uf] += valor;
+          if (uf && !isNaN(valor)) ufGroups[uf] = (ufGroups[uf] || 0) + valor;
         });
         
         const sortedUFs = Object.entries(ufGroups)
-          .map(([uf, total]) => ({ uf, valor_total: total }))
-          .sort((a, b) => b.valor_total - a.valor_total);
+          .map(([uf, total]) => ({ uf, valor_total: total as number }))
+          .sort((a, b) => (b.valor_total || 0) - (a.valor_total || 0));
           
         result = {
           uf_com_maior_valor: sortedUFs[0],
@@ -590,21 +593,21 @@ class HTTPMCPServer {
           throw new Error(`Required columns not found. Available columns: ${Object.keys(cabecalho[0]).join(', ')}`);
         }
         
-        const internetOps = cabecalho.filter(nf => {
+        const internetOps = cabecalho.filter((nf: any) => {
           const internet = String(nf[internetColumn] || '').toLowerCase();
           return internet === 's' || internet === 'sim' || internet === 'true' || internet === '1';
         });
         
-        const cityGroups = {};
-        internetOps.forEach(nf => {
+        const cityGroups: any = {};
+        internetOps.forEach((nf: any) => {
           const cidade = nf[cidadeColumn];
           if (cidade && !cityGroups[cidade]) cityGroups[cidade] = 0;
-          if (cidade) cityGroups[cidade]++;
+          if (cidade) cityGroups[cidade] = (cityGroups[cidade] || 0) + 1;
         });
         
         const sortedCities = Object.entries(cityGroups)
-          .map(([cidade, operacoes]) => ({ cidade, operacoes_internet: operacoes }))
-          .sort((a, b) => b.operacoes_internet - a.operacoes_internet)
+          .map(([cidade, operacoes]) => ({ cidade, operacoes_internet: operacoes as number }))
+          .sort((a, b) => (b.operacoes_internet || 0) - (a.operacoes_internet || 0))
           .slice(0, 2);
           
         result = {
@@ -628,12 +631,12 @@ class HTTPMCPServer {
           throw new Error(`Required columns not found. Available columns: ${Object.keys(itens[0]).join(', ')}`);
         }
         
-        const categoryItems = itens.filter(item => {
+        const categoryItems = itens.filter((item: any) => {
           const desc = String(item[descColumn] || '').toLowerCase();
           return desc.includes(categoryFilter.toLowerCase());
         });
         
-        const totalValue = categoryItems.reduce((sum, item) => {
+        const totalValue = categoryItems.reduce((sum: number, item: any) => {
           const valor = parseFloat(String(item[valorItemColumn] || 0));
           return sum + (isNaN(valor) ? 0 : valor);
         }, 0);
@@ -642,7 +645,7 @@ class HTTPMCPServer {
           categoria: categoryFilter,
           total_valor: totalValue,
           quantidade_itens: categoryItems.length,
-          itens_encontrados: categoryItems.slice(0, 5).map(item => ({
+          itens_encontrados: categoryItems.slice(0, 5).map((item: any) => ({
             descricao: item[descColumn],
             valor: item[valorItemColumn]
           })),
@@ -665,7 +668,9 @@ class HTTPMCPServer {
   }
 
   // Helper method to find column names with variations
-  findColumn(row, possibleNames) {
+  findColumn(row: any, possibleNames: string[]): string | null {
+    if (!row) return null;
+    
     const keys = Object.keys(row);
     for (const name of possibleNames) {
       // Try exact match first
