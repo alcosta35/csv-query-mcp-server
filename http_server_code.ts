@@ -42,8 +42,8 @@ class HTTPMCPServer {
     this.app.use(helmet());
     this.app.use(cors({
       origin: process.env.NODE_ENV === 'production' 
-        ? ['https://claude.ai'] 
-        : ['http://localhost:3000', 'http://127.0.0.1:3000']
+        ? ['https://claude.ai', /\.n8n\.cloud$/, /localhost:\d+/] 
+        : ['http://localhost:3000', 'http://127.0.0.1:3000', /localhost:\d+/]
     }));
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -60,6 +60,8 @@ class HTTPMCPServer {
     this.app.use('/mcp', this.authenticateToken.bind(this));
     this.app.use('/upload', this.authenticateToken.bind(this));
     this.app.use('/download', this.authenticateToken.bind(this));
+    // Novo endpoint para upload público (será usado pelo N8N)
+    this.app.use('/public-upload', this.authenticateTokenOptional.bind(this));
   }
 
   authenticateToken(req: any, res: any, next: any) {
@@ -77,6 +79,22 @@ class HTTPMCPServer {
     next();
   }
 
+  // Autenticação opcional para upload público
+  authenticateTokenOptional(req: any, res: any, next: any) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    const queryToken = req.query.token;
+
+    // Aceita token no header ou query string
+    if (token === this.authToken || queryToken === this.authToken) {
+      req.authenticated = true;
+    } else {
+      req.authenticated = false;
+    }
+
+    next();
+  }
+
   setupRoutes() {
     this.app.get('/health', (req: any, res: any) => {
       res.json({ 
@@ -86,6 +104,96 @@ class HTTPMCPServer {
         service: 'csv-query-mcp-server',
         loadedTables: Array.from(this.loadedData.keys())
       });
+    });
+
+    // Página de upload web
+    this.app.get('/upload-form', (req: any, res: any) => {
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Upload para Google Drive</title>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+                .form-group { margin-bottom: 20px; }
+                label { display: block; margin-bottom: 5px; font-weight: bold; }
+                input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+                button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; }
+                button:hover { background: #0056b3; }
+                .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+                .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+                .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+                .loading { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+            </style>
+        </head>
+        <body>
+            <h1>📁 Upload para Google Drive e Análise</h1>
+            
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="file">Arquivo ZIP com CSVs:</label>
+                    <input type="file" id="file" name="file" accept=".zip" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="prompt">Pergunta para análise:</label>
+                    <textarea id="prompt" name="prompt" rows="4" placeholder="Ex: Qual estado teve maior valor total de notas fiscais?" required></textarea>
+                </div>
+                
+                <button type="submit">📤 Upload e Analisar</button>
+            </form>
+            
+            <div id="result"></div>
+
+            <script>
+                document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.innerHTML = '<div class="result loading">🔄 Fazendo upload e processando...</div>';
+                    
+                    const formData = new FormData();
+                    const fileInput = document.getElementById('file');
+                    const promptInput = document.getElementById('prompt');
+                    
+                    formData.append('file', fileInput.files[0]);
+                    formData.append('prompt', promptInput.value);
+                    
+                    try {
+                        const response = await fetch('/public-upload?token=${this.authToken}', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            resultDiv.innerHTML = \`
+                                <div class="result success">
+                                    <h3>✅ Upload realizado com sucesso!</h3>
+                                    <p><strong>Arquivo no Google Drive:</strong> \${result.fileName}</p>
+                                    <p><strong>ID do arquivo:</strong> \${result.fileId}</p>
+                                    <p><strong>Pergunta:</strong> \${result.prompt}</p>
+                                    <hr>
+                                    <h4>🔗 Links para N8N:</h4>
+                                    <p><strong>URL do Webhook:</strong></p>
+                                    <textarea readonly style="font-family: monospace; font-size: 12px;">\${result.n8nWebhookUrl}</textarea>
+                                    <p><strong>Payload JSON:</strong></p>
+                                    <textarea readonly style="font-family: monospace; font-size: 12px; height: 100px;">\${JSON.stringify(result.n8nPayload, null, 2)}</textarea>
+                                </div>
+                            \`;
+                        } else {
+                            resultDiv.innerHTML = \`<div class="result error">❌ Erro: \${result.error}</div>\`;
+                        }
+                    } catch (error) {
+                        resultDiv.innerHTML = \`<div class="result error">❌ Erro de conexão: \${error.message}</div>\`;
+                    }
+                });
+            </script>
+        </body>
+        </html>
+      `);
     });
 
     this.app.get('/auth', (req: any, res: any) => {
@@ -107,7 +215,7 @@ class HTTPMCPServer {
         console.log('Add this to your environment variables: GOOGLE_REFRESH_TOKEN=' + tokens.refresh_token);
 
         res.send(`
-          <h1> Authorization Successful!</h1>
+          <h1>✅ Authorization Successful!</h1>
           <p><strong>Your refresh token is:</strong><br>
           <code style="background: #f4f4f4; padding: 10px; display: block; margin: 10px 0; word-break: break-all;">
           ${tokens.refresh_token}
@@ -118,7 +226,7 @@ class HTTPMCPServer {
             <li>Restart your server</li>
             <li>You can now use the Google Drive features!</li>
           </ol>
-          <p><a href="/health">Check server status</a></p>
+          <p><a href="/health">Check server status</a> | <a href="/upload-form">Upload Form</a></p>
         `);
       } catch (error: any) {
         console.error('OAuth callback error:', error);
@@ -138,6 +246,7 @@ class HTTPMCPServer {
       limits: { fileSize: 100 * 1024 * 1024 }
     });
 
+    // Upload original (protegido)
     this.app.post('/upload', upload.single('file'), async (req: any, res: any) => {
       try {
         if (!req.file) {
@@ -158,6 +267,56 @@ class HTTPMCPServer {
         });
       } catch (error: any) {
         console.error('Upload error:', error);
+        res.status(500).json({ 
+          error: 'Failed to upload file',
+          details: error.message
+        });
+      }
+    });
+
+    // Novo endpoint de upload público para o formulário web
+    this.app.post('/public-upload', upload.single('file'), async (req: any, res: any) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        if (!req.authenticated) {
+          return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        const prompt = req.body.prompt || 'Analise os dados';
+        const fileName = req.file.originalname || `upload-${uuidv4()}.zip`;
+
+        console.log(`📤 Public upload: ${fileName}, prompt: ${prompt}`);
+
+        const fileId = await this.driveHandler.uploadFile(req.file.path, fileName);
+
+        await fs.unlink(req.file.path).catch(() => {});
+
+        // Preparar dados para o N8N
+        const n8nPayload = {
+          fileId: fileId,
+          fileName: fileName,
+          prompt: prompt,
+          timestamp: new Date().toISOString()
+        };
+
+        // URL do webhook N8N (você precisará configurar isso)
+        const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL || 'https://seu-n8n.n8n.cloud/webhook/analyze-csv';
+
+        res.json({ 
+          success: true, 
+          fileId,
+          fileName,
+          prompt,
+          message: 'File uploaded to Google Drive successfully',
+          n8nWebhookUrl,
+          n8nPayload
+        });
+
+      } catch (error: any) {
+        console.error('Public upload error:', error);
         res.status(500).json({ 
           error: 'Failed to upload file',
           details: error.message
@@ -200,7 +359,7 @@ class HTTPMCPServer {
       }
     });
 
-    // MCP endpoint with detailed logging
+    // MCP endpoint com detailed logging
     this.app.post('/mcp', async (req: any, res: any) => {
       console.log('=== MCP Request Received ===');
       console.log('Method:', req.body?.method);
@@ -229,11 +388,9 @@ class HTTPMCPServer {
             break;
           case 'notifications/initialized':
             console.log('✅ Handling notifications/initialized');
-            // Notifications don't need a response, just acknowledge
             return res.status(200).end();
           case 'notifications/cancelled':
             console.log('✅ Handling notifications/cancelled for request:', request.params?.requestId);
-            // Notifications don't need a response, just acknowledge
             return res.status(200).end();
           default:
             console.log(`❌ Unknown method: ${request.method}`);
@@ -557,7 +714,6 @@ class HTTPMCPServer {
         break;
         
       case 'uf_values':
-        // Find the correct UF column
         const ufColumn = this.findColumn(cabecalho[0], ['uf_emitente', 'uf', 'uf emitente', 'estado']);
         const valorColumn = this.findColumn(cabecalho[0], ['valor_total', 'valor', 'valor total', 'total']);
         
@@ -695,6 +851,7 @@ class HTTPMCPServer {
       console.log(`🔐 Authentication required with token: ${this.authToken.substring(0, 10)}...`);
       console.log(`📁 Google Drive integration enabled`);
       console.log(`💚 Health check: http://localhost:${port}/health`);
+      console.log(`📤 Upload form: http://localhost:${port}/upload-form`);
     });
   }
 }
