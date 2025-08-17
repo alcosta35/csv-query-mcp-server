@@ -1,3 +1,4 @@
+# render.yaml - Configuração atualizada para o Render
 services:
   - type: web
     name: csv-query-mcp
@@ -7,3 +8,51 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: MCP_AUTH_TOKEN
+        value: mcp24d91738b41c192e8498715c086acd16c7e9d84124590b1d5562881d5d4f7
+      - key: GOOGLE_CLIENT_ID
+        value: 994566912326-trn9aap99rnglrtgrp1754mterd8i60t.apps.googleusercontent.com
+      - key: GOOGLE_CLIENT_SECRET
+        value: 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
+      - key: GOOGLE_REDIRECT_URI
+        value: https://csv-query-mcp.onrender.com/auth/callback
+      - key: GOOGLE_DRIVE_FOLDER_ID
+        value: 11KiQQCN1yR0jV9DDgZ1BLZ5qhIL_BE38
+      # Adicione o GOOGLE_REFRESH_TOKEN depois de fazer a autenticação
+      # - key: GOOGLE_REFRESH_TOKEN
+      #   value: SEU_REFRESH_TOKEN_AQUI
+      # URL do webhook N8N (opcional)
+      - key: N8N_WEBHOOK_URL
+        value: https://seu-n8n.n8n.cloud/webhook/analyze-csv
+
+---
+
+# Instruções de deploy:
+
+## 1. Atualize o código no Render:
+# - Substitua o arquivo http_server_code.ts pelo código atualizado
+# - Faça deploy no Render
+
+## 2. Configure a autenticação do Google Drive:
+# - Acesse: https://csv-query-mcp.onrender.com/auth
+# - Siga o fluxo de autenticação
+# - Copie o refresh token e adicione às variáveis de ambiente no Render
+
+## 3. Teste o formulário de upload:
+# - Acesse: https://csv-query-mcp.onrender.com/upload-form
+# - Faça upload de um arquivo ZIP com CSVs
+# - Teste a funcionalidade
+
+## 4. Configure o N8N:
+# - Importe o workflow JSON atualizado
+# - Configure as credenciais necessárias:
+#   * OpenAI API (para análise IA)
+#   * SMTP (para envio de emails, opcional)
+#   * HTTP Auth para conexão com o Render
+# - Ative o workflow
+
+## 5. URLs importantes:
+# - Health check: https://csv-query-mcp.onrender.com/health
+# - Formulário upload: https://csv-query-mcp.onrender.com/upload-form
+# - Auth Google: https://csv-query-mcp.onrender.com/auth
+# - MCP endpoint: https://csv-query-mcp.onrender.com/mcp
