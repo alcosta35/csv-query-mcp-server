@@ -30,17 +30,34 @@ export class ZipHandler {
         }
 
         zipfile.on('entry', (entry) => {
+          console.log(`📄 Found entry: ${entry.fileName}`);
+          
           // Skip directories
           if (entry.fileName.endsWith('/')) {
+            console.log(`⏭️ Skipping directory: ${entry.fileName}`);
             zipfile.readEntry();
             return;
           }
 
-          // Only process CSV files
-          if (!entry.fileName.toLowerCase().endsWith('.csv')) {
+          // Skip hidden files and system files
+          const fileName = path.basename(entry.fileName);
+          if (fileName.startsWith('.') || fileName.startsWith('__MACOSX')) {
+            console.log(`⏭️ Skipping system file: ${entry.fileName}`);
             zipfile.readEntry();
             return;
           }
+
+          // Accept multiple file types: CSV, Excel, TSV, TXT
+          const supportedExtensions = ['.csv', '.xlsx', '.xls', '.tsv', '.txt'];
+          const fileExtension = path.extname(entry.fileName).toLowerCase();
+          
+          if (!supportedExtensions.includes(fileExtension)) {
+            console.log(`⏭️ Skipping unsupported file type: ${entry.fileName} (${fileExtension})`);
+            zipfile.readEntry();
+            return;
+          }
+
+          console.log(`✅ Processing supported file: ${entry.fileName}`);
 
           // Get just the filename without path to avoid directory traversal
           const safeFileName = path.basename(entry.fileName);
@@ -64,7 +81,13 @@ export class ZipHandler {
             });
 
             writeStream.on('finish', () => {
-              extractedFiles.push(outputPath);
+              console.log(`✅ Extracted: ${safeFileName}`);
+              extractedFiles.push({
+                path: outputPath,
+                name: safeFileName,
+                type: fileExtension,
+                originalName: entry.fileName
+              });
               zipfile.readEntry();
             });
 
@@ -83,6 +106,7 @@ export class ZipHandler {
         });
 
         zipfile.on('end', () => {
+          console.log(`📁 ZIP extraction complete. Found ${extractedFiles.length} files.`);
           resolve(extractedFiles);
         });
 
