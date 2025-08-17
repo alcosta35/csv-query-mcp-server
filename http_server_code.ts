@@ -17,7 +17,7 @@ class HTTPMCPServer {
   driveHandler: any;
   loadedData: Map<string, any[]>;
   authToken: string;
-  excelParser: any; // Added for Excel support
+  excelParser: any;
 
   constructor() {
     console.log('=== MCP Server Starting ===');
@@ -27,7 +27,6 @@ class HTTPMCPServer {
     this.authToken = process.env.MCP_AUTH_TOKEN || 'default-dev-token';
     this.loadedData = new Map();
     
-    // Initialize handlers
     this.csvParser = new CSVParser();
     this.zipHandler = new ZipHandler();
     this.driveHandler = new GoogleDriveOAuthHandler();
@@ -43,13 +42,12 @@ class HTTPMCPServer {
     this.app.use(helmet());
     this.app.use(cors({
       origin: process.env.NODE_ENV === 'production' 
-        ? ['https://claude.ai', /\.n8n\.cloud$/, /localhost:\d+/] 
-        : ['http://localhost:3000', 'http://127.0.0.1:3000', /localhost:\d+/]
+        ? ['https://claude.ai'] 
+        : ['http://localhost:3000', 'http://127.0.0.1:3000']
     }));
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-    // Global request logging
     this.app.use((req: any, res: any, next: any) => {
       console.log(`🌐 ${req.method} ${req.path} - ${new Date().toISOString()}`);
       if (req.path === '/mcp') {
@@ -61,8 +59,6 @@ class HTTPMCPServer {
     this.app.use('/mcp', this.authenticateToken.bind(this));
     this.app.use('/upload', this.authenticateToken.bind(this));
     this.app.use('/download', this.authenticateToken.bind(this));
-    // Novo endpoint para upload público (será usado pelo N8N)
-    this.app.use('/public-upload', this.authenticateTokenOptional.bind(this));
   }
 
   authenticateToken(req: any, res: any, next: any) {
@@ -80,22 +76,6 @@ class HTTPMCPServer {
     next();
   }
 
-  // Autenticação opcional para upload público
-  authenticateTokenOptional(req: any, res: any, next: any) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    const queryToken = req.query.token;
-
-    // Aceita token no header ou query string
-    if (token === this.authToken || queryToken === this.authToken) {
-      req.authenticated = true;
-    } else {
-      req.authenticated = false;
-    }
-
-    next();
-  }
-
   setupRoutes() {
     this.app.get('/health', (req: any, res: any) => {
       res.json({ 
@@ -105,96 +85,6 @@ class HTTPMCPServer {
         service: 'csv-query-mcp-server',
         loadedTables: Array.from(this.loadedData.keys())
       });
-    });
-
-    // Página de upload web
-    this.app.get('/upload-form', (req: any, res: any) => {
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Upload para Google Drive</title>
-            <meta charset="UTF-8">
-            <style>
-                body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-                .form-group { margin-bottom: 20px; }
-                label { display: block; margin-bottom: 5px; font-weight: bold; }
-                input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-                button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; }
-                button:hover { background: #0056b3; }
-                .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
-                .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-                .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-                .loading { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-            </style>
-        </head>
-        <body>
-            <h1>📁 Upload para Google Drive e Análise</h1>
-            
-            <form id="uploadForm" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="file">Arquivo ZIP com dados:</label>
-                    <input type="file" id="file" name="file" accept=".zip" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="prompt">Pergunta para análise:</label>
-                    <textarea id="prompt" name="prompt" rows="4" placeholder="Ex: Qual estado teve maior valor total de notas fiscais?" required></textarea>
-                </div>
-                
-                <button type="submit">📤 Upload e Analisar</button>
-            </form>
-            
-            <div id="result"></div>
-
-            <script>
-                document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    
-                    const resultDiv = document.getElementById('result');
-                    resultDiv.innerHTML = '<div class="result loading">🔄 Fazendo upload e processando...</div>';
-                    
-                    const formData = new FormData();
-                    const fileInput = document.getElementById('file');
-                    const promptInput = document.getElementById('prompt');
-                    
-                    formData.append('file', fileInput.files[0]);
-                    formData.append('prompt', promptInput.value);
-                    
-                    try {
-                        const response = await fetch('/public-upload?token=${this.authToken}', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (result.success) {
-                            resultDiv.innerHTML = \`
-                                <div class="result success">
-                                    <h3>✅ Upload realizado com sucesso!</h3>
-                                    <p><strong>Arquivo no Google Drive:</strong> \${result.fileName}</p>
-                                    <p><strong>ID do arquivo:</strong> \${result.fileId}</p>
-                                    <p><strong>Pergunta:</strong> \${result.prompt}</p>
-                                    <hr>
-                                    <h4>🔗 Links para N8N:</h4>
-                                    <p><strong>URL do Webhook:</strong></p>
-                                    <textarea readonly style="font-family: monospace; font-size: 12px;">\${result.n8nWebhookUrl}</textarea>
-                                    <p><strong>Payload JSON:</strong></p>
-                                    <textarea readonly style="font-family: monospace; font-size: 12px; height: 100px;">\${JSON.stringify(result.n8nPayload, null, 2)}</textarea>
-                                </div>
-                            \`;
-                        } else {
-                            resultDiv.innerHTML = \`<div class="result error">❌ Erro: \${result.error}</div>\`;
-                        }
-                    } catch (error) {
-                        resultDiv.innerHTML = \`<div class="result error">❌ Erro de conexão: \${error.message}</div>\`;
-                    }
-                });
-            </script>
-        </body>
-        </html>
-      `);
     });
 
     this.app.get('/auth', (req: any, res: any) => {
@@ -227,7 +117,7 @@ class HTTPMCPServer {
             <li>Restart your server</li>
             <li>You can now use the Google Drive features!</li>
           </ol>
-          <p><a href="/health">Check server status</a> | <a href="/upload-form">Upload Form</a></p>
+          <p><a href="/health">Check server status</a></p>
         `);
       } catch (error: any) {
         console.error('OAuth callback error:', error);
@@ -247,7 +137,6 @@ class HTTPMCPServer {
       limits: { fileSize: 100 * 1024 * 1024 }
     });
 
-    // Upload original (protegido)
     this.app.post('/upload', upload.single('file'), async (req: any, res: any) => {
       try {
         if (!req.file) {
@@ -268,56 +157,6 @@ class HTTPMCPServer {
         });
       } catch (error: any) {
         console.error('Upload error:', error);
-        res.status(500).json({ 
-          error: 'Failed to upload file',
-          details: error.message
-        });
-      }
-    });
-
-    // Novo endpoint de upload público para o formulário web
-    this.app.post('/public-upload', upload.single('file'), async (req: any, res: any) => {
-      try {
-        if (!req.file) {
-          return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        if (!req.authenticated) {
-          return res.status(401).json({ error: 'Authentication required' });
-        }
-
-        const prompt = req.body.prompt || 'Analise os dados';
-        const fileName = req.file.originalname || `upload-${uuidv4()}.zip`;
-
-        console.log(`📤 Public upload: ${fileName}, prompt: ${prompt}`);
-
-        const fileId = await this.driveHandler.uploadFile(req.file.path, fileName);
-
-        await fs.unlink(req.file.path).catch(() => {});
-
-        // Preparar dados para o N8N
-        const n8nPayload = {
-          fileId: fileId,
-          fileName: fileName,
-          prompt: prompt,
-          timestamp: new Date().toISOString()
-        };
-
-        // URL do webhook N8N (você precisará configurar isso)
-        const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL || 'https://seu-n8n.n8n.cloud/webhook/analyze-csv';
-
-        res.json({ 
-          success: true, 
-          fileId,
-          fileName,
-          prompt,
-          message: 'File uploaded to Google Drive successfully',
-          n8nWebhookUrl,
-          n8nPayload
-        });
-
-      } catch (error: any) {
-        console.error('Public upload error:', error);
         res.status(500).json({ 
           error: 'Failed to upload file',
           details: error.message
@@ -360,7 +199,6 @@ class HTTPMCPServer {
       }
     });
 
-    // MCP endpoint com detailed logging
     this.app.post('/mcp', async (req: any, res: any) => {
       console.log('=== MCP Request Received ===');
       console.log('Method:', req.body?.method);
@@ -530,7 +368,6 @@ class HTTPMCPServer {
     }
   }
 
-  // Enhanced handleLoadCSVFromDrive method that supports multiple file types
   async handleLoadCSVFromDrive(fileId: string) {
     const tempZipPath = `/tmp/download-${uuidv4()}.zip`;
     const extractPath = `/tmp/extracted-${uuidv4()}`;
@@ -546,7 +383,6 @@ class HTTPMCPServer {
         throw new Error('Google Drive not authenticated. Please complete OAuth flow first.');
       }
       
-      // Download file
       await this.driveHandler.downloadFile(fileId, tempZipPath);
       const stats = await fs.stat(tempZipPath);
       console.log(`📦 Downloaded file size: ${stats.size} bytes`);
@@ -555,11 +391,10 @@ class HTTPMCPServer {
         throw new Error('Downloaded file is empty. Please check the file ID and permissions.');
       }
       
-      if (stats.size > 100 * 1024 * 1024) { // 100MB limit
+      if (stats.size > 100 * 1024 * 1024) {
         throw new Error('File is too large (>100MB). Please use a smaller file.');
       }
 
-      // Extract all files from ZIP
       const extractedFiles = await this.zipHandler.extractZip(tempZipPath, extractPath);
       console.log(`📂 Extracted ${extractedFiles.length} files`);
 
@@ -567,7 +402,6 @@ class HTTPMCPServer {
         throw new Error('No supported files found in the zip archive. Supported formats: CSV, XLSX, XLS, TSV, TXT');
       }
 
-      // Initialize Excel parser if not exists
       if (!this.excelParser) {
         const { ExcelParser } = require('./excel-parser');
         this.excelParser = new ExcelParser();
@@ -582,13 +416,9 @@ class HTTPMCPServer {
           const { path: filePath, name: fileName, type: fileType } = fileInfo;
           console.log(`📊 Processing ${fileName} (${fileType})`);
           
-          let data;
-          let tableName = fileName;
-          
           if (fileType === '.csv' || fileType === '.tsv' || fileType === '.txt') {
-            // Parse as CSV/TSV
-            data = await this.csvParser.parseCSV(filePath);
-            this.loadedData.set(tableName, data);
+            const data = await this.csvParser.parseCSV(filePath);
+            this.loadedData.set(fileName, data);
             
             console.log(`✅ Loaded ${data.length} rows from ${fileName}`);
             loadResults.push(`✅ ${fileName}: ${data.length} rows loaded (CSV format)`);
@@ -596,17 +426,13 @@ class HTTPMCPServer {
             successCount++;
             
           } else if (fileType === '.xlsx' || fileType === '.xls') {
-            // Parse as Excel
             const excelData = await this.excelParser.parseExcel(filePath);
-            
-            // Handle multiple sheets
             const sheetNames = Object.keys(excelData);
             console.log(`📋 Excel file has ${sheetNames.length} sheets: ${sheetNames.join(', ')}`);
             
             for (const sheetName of sheetNames) {
               const sheetData = excelData[sheetName];
               if (sheetData && sheetData.length > 0) {
-                // Create table name: filename_sheetname
                 const baseFileName = fileName.replace(/\.(xlsx|xls)$/i, '');
                 const sheetTableName = sheetNames.length > 1 
                   ? `${baseFileName}_${sheetName.replace(/[^\w]/g, '_')}.csv`
@@ -770,4 +596,188 @@ ${loadResults.join('\n')}
         
       case 'filter':
         if (!column || value === undefined) throw new Error('Column and value are required for filter operation');
-        result = (data ||
+        result = (data || []).filter((row: any) => {
+          const rowValue = String(row[column] || '').toLowerCase();
+          const searchValue = String(value).toLowerCase();
+          return rowValue.includes(searchValue);
+        }).slice(0, limit);
+        break;
+        
+      case 'all':
+        result = (data || []).slice(0, limit);
+        break;
+        
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Query result for ${table} (${operation}):\n\n${JSON.stringify(result, null, 2)}`,
+        },
+      ],
+    };
+  }
+
+  async handleAnalyzeNFData(args: any) {
+    const { analysis_type, category } = args;
+    
+    const cabecalho = this.loadedData.get('202401_NFs_Cabecalho.csv');
+    const itens = this.loadedData.get('202401_NFs_Itens.csv');
+    
+    if (!cabecalho) {
+      throw new Error('202401_NFs_Cabecalho.csv not loaded. Please load the data first using load_csv_from_drive.');
+    }
+    
+    let result: any;
+    
+    switch (analysis_type) {
+      case 'total_nfs':
+        result = {
+          total_notas_fiscais: cabecalho.length,
+          periodo: 'Janeiro 2024'
+        };
+        break;
+        
+      case 'uf_values':
+        const ufColumn = this.findColumn(cabecalho[0], ['uf_emitente', 'uf', 'uf emitente', 'estado']);
+        const valorColumn = this.findColumn(cabecalho[0], ['valor_total', 'valor', 'valor total', 'total']);
+        
+        if (!ufColumn || !valorColumn) {
+          throw new Error(`Required columns not found. Available columns: ${Object.keys(cabecalho[0]).join(', ')}`);
+        }
+        
+        const ufGroups: any = {};
+        cabecalho.forEach((nf: any) => {
+          const uf = nf[ufColumn];
+          const valor = parseFloat(String(nf[valorColumn] || 0));
+          
+          if (uf && !ufGroups[uf]) ufGroups[uf] = 0;
+          if (uf && !isNaN(valor)) ufGroups[uf] = (ufGroups[uf] || 0) + valor;
+        });
+        
+        const sortedUFs = Object.entries(ufGroups)
+          .map(([uf, total]) => ({ uf, valor_total: total as number }))
+          .sort((a, b) => (b.valor_total || 0) - (a.valor_total || 0));
+          
+        result = {
+          uf_com_maior_valor: sortedUFs[0],
+          ranking_completo: sortedUFs,
+          colunas_usadas: { uf: ufColumn, valor: valorColumn }
+        };
+        break;
+        
+      case 'internet_cities':
+        const internetColumn = this.findColumn(cabecalho[0], ['internet', 'operacao_internet', 'operação internet', 'via_internet']);
+        const cidadeColumn = this.findColumn(cabecalho[0], ['cidade_emitente', 'cidade', 'cidade emitente', 'municipio']);
+        
+        if (!internetColumn || !cidadeColumn) {
+          throw new Error(`Required columns not found. Available columns: ${Object.keys(cabecalho[0]).join(', ')}`);
+        }
+        
+        const internetOps = cabecalho.filter((nf: any) => {
+          const internet = String(nf[internetColumn] || '').toLowerCase();
+          return internet === 's' || internet === 'sim' || internet === 'true' || internet === '1';
+        });
+        
+        const cityGroups: any = {};
+        internetOps.forEach((nf: any) => {
+          const cidade = nf[cidadeColumn];
+          if (cidade && !cityGroups[cidade]) cityGroups[cidade] = 0;
+          if (cidade) cityGroups[cidade] = (cityGroups[cidade] || 0) + 1;
+        });
+        
+        const sortedCities = Object.entries(cityGroups)
+          .map(([cidade, operacoes]) => ({ cidade, operacoes_internet: operacoes as number }))
+          .sort((a, b) => (b.operacoes_internet || 0) - (a.operacoes_internet || 0))
+          .slice(0, 2);
+          
+        result = {
+          duas_cidades_mais_operacoes_internet: sortedCities,
+          total_operacoes_internet: internetOps.length,
+          total_notas_fiscais: cabecalho.length,
+          colunas_usadas: { internet: internetColumn, cidade: cidadeColumn }
+        };
+        break;
+        
+      case 'category_values':
+        if (!itens) {
+          throw new Error('202401_NFs_Itens.csv not loaded. Cannot analyze category values.');
+        }
+        
+        const categoryFilter = category || 'Livros';
+        const descColumn = this.findColumn(itens[0], ['descricao', 'produto', 'item', 'categoria']);
+        const valorItemColumn = this.findColumn(itens[0], ['valor', 'valor_item', 'valor item', 'preco']);
+        
+        if (!descColumn || !valorItemColumn) {
+          throw new Error(`Required columns not found. Available columns: ${Object.keys(itens[0]).join(', ')}`);
+        }
+        
+        const categoryItems = itens.filter((item: any) => {
+          const desc = String(item[descColumn] || '').toLowerCase();
+          return desc.includes(categoryFilter.toLowerCase());
+        });
+        
+        const totalValue = categoryItems.reduce((sum: number, item: any) => {
+          const valor = parseFloat(String(item[valorItemColumn] || 0));
+          return sum + (isNaN(valor) ? 0 : valor);
+        }, 0);
+        
+        result = {
+          categoria: categoryFilter,
+          total_valor: totalValue,
+          quantidade_itens: categoryItems.length,
+          itens_encontrados: categoryItems.slice(0, 5).map((item: any) => ({
+            descricao: item[descColumn],
+            valor: item[valorItemColumn]
+          })),
+          colunas_usadas: { descricao: descColumn, valor: valorItemColumn }
+        };
+        break;
+        
+      default:
+        throw new Error(`Unknown analysis type: ${analysis_type}`);
+    }
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Análise NF (${analysis_type}):\n\n${JSON.stringify(result, null, 2)}`,
+        },
+      ],
+    };
+  }
+
+  findColumn(row: any, possibleNames: string[]): string | null {
+    if (!row) return null;
+    
+    const keys = Object.keys(row);
+    for (const name of possibleNames) {
+      if (keys.includes(name)) return name;
+      
+      const found = keys.find(key => key.toLowerCase() === name.toLowerCase());
+      if (found) return found;
+      
+      const partial = keys.find(key => key.toLowerCase().includes(name.toLowerCase()));
+      if (partial) return partial;
+    }
+    return null;
+  }
+
+  async start() {
+    const port = process.env.PORT || 3000;
+    
+    this.app.listen(port, () => {
+      console.log(`🚀 CSV Query MCP Server running on port ${port}`);
+      console.log(`🔐 Authentication required with token: ${this.authToken.substring(0, 10)}...`);
+      console.log(`📁 Google Drive integration enabled`);
+      console.log(`💚 Health check: http://localhost:${port}/health`);
+    });
+  }
+}
+
+const server = new HTTPMCPServer();
+server.start().catch(console.error);
