@@ -1,89 +1,151 @@
-// Enhanced OAuth handler with better token management
-async getTokens(code) {
-  try {
-    console.log('🔐 Exchanging authorization code for tokens...');
-    
-    const { tokens } = await this.oauth2Client.getToken(code);
-    console.log('✅ Tokens received successfully');
-    
-    // Set credentials
-    this.oauth2Client.setCredentials(tokens);
-    
-    // Initialize drive service
-    this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
-    
-    // Verify the tokens work by making a test call
+/// <reference path="./globals.d.ts" />
+const { google } = require('googleapis');
+const { OAuth2Client } = require('google-auth-library');
+const fs = require('fs').promises;
+const { createReadStream, createWriteStream } = require('fs');
+const path = require('path');
+
+export class GoogleDriveOAuthHandler {
+  oauth2Client: any;
+  drive: any;
+  folderId: string;
+
+  constructor() {
+    this.oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+    );
+
+    this.folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
+
+    if (process.env.GOOGLE_REFRESH_TOKEN) {
+      this.oauth2Client.setCredentials({
+        refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+      });
+      
+      this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
+    }
+  }
+
+  getAuthUrl(): string {
+    const scopes = [
+      'https://www.googleapis.com/auth/drive.file',
+      'https://www.googleapis.com/auth/drive.readonly'
+    ];
+
+    return this.oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: scopes,
+      prompt: 'consent'
+    });
+  }
+
+  async getTokens(code: string) {
     try {
-      await this.drive.about.get({ fields: 'user' });
-      console.log('✅ Token validation successful');
-    } catch (testError) {
-      console.warn('⚠️ Token validation failed:', testError.message);
+      const { tokens } = await this.oauth2Client.getToken(code);
+      this.oauth2Client.setCredentials(tokens);
+      
+      this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
+      
+      return tokens;
+    } catch (error: any) {
+      throw new Error(`Failed to exchange code for tokens: ${error.message}`);
     }
-    
-    return tokens;
-  } catch (error) {
-    console.error('❌ Token exchange error:', error);
-    
-    let errorMessage = `Failed to exchange code for tokens: ${error.message}`;
-    
-    if (error.message.includes('invalid_grant')) {
-      errorMessage += '\n\nThis usually means:\n';
-      errorMessage += '1. The authorization code has expired (use within 10 minutes)\n';
-      errorMessage += '2. The code has already been used\n';
-      errorMessage += '3. The redirect URI doesn\'t match\n\n';
-      errorMessage += 'Please try the authorization process again.';
-    }
-    
-    throw new Error(errorMessage);
   }
-}
 
-// Enhanced authentication check
-isAuthenticated() {
-  if (!this.oauth2Client) {
-    console.log('❌ OAuth client not initialized');
-    return false;
+  isAuthenticated(): boolean {
+    return this.drive !== null && this.drive !== undefined;
   }
-  
-  const credentials = this.oauth2Client.credentials;
-  if (!credentials) {
-    console.log('❌ No credentials found');
-    return false;
-  }
-  
-  if (!credentials.refresh_token && !credentials.access_token) {
-    console.log('❌ No tokens found');
-    return false;
-  }
-  
-  // Check if we have a drive instance
-  if (!this.drive) {
-    console.log('🔄 Reinitializing drive service...');
-    this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
-  }
-  
-  console.log('✅ Authentication check passed');
-  return true;
-}
 
-// Auto-refresh tokens when needed
-async ensureValidTokens() {
-  try {
-    if (!this.oauth2Client.credentials.access_token) {
-      console.log('🔄 No access token, attempting refresh...');
-      await this.oauth2Client.getAccessToken();
+  async uploadFile(filePath: string, fileName: string): Promise<string> {
+    if (!this.drive) {
+      throw new Error('Not authenticated. Please complete OAuth flow first.');
     }
-    
-    // Check if token is about to expire (refresh if less than 5 minutes left)
-    const expiryDate = this.oauth2Client.credentials.expiry_date;
-    if (expiryDate && expiryDate < Date.now() + 5 * 60 * 1000) {
-      console.log('🔄 Token expiring soon, refreshing...');
-      await this.oauth2Client.getAccessToken();
+
+    try {
+      const fileMetadata = {
+        name: fileName,
+        parents: this.folderId ? [this.folderId] : undefined,
+      };
+
+      const media = {
+        mimeType: 'application/octet-stream',
+        body: createReadStream(filePath),
+      };
+
+      const response = await this.drive.files.create({
+        requestBody: fileMetadata,
+        media: media,
+        fields: 'id',
+      });
+
+      if (!response.data.id) {
+        throw new Error('Failed to get file ID from upload response');
+      }
+
+      console.log(`File uploaded successfully. File ID: ${response.data.id}`);
+      return response.data.id;
+    } catch (error: any) {
+      throw new Error(`Failed to upload file to Google Drive: ${error.message}`);
     }
-    
-    return true;
-  } catch (error) {
-    console.error('❌ Token refresh failed:', error);
-    return false;
+  }
+
+  async downloadFile(fileId: string, destinationPath: string): Promise<string> {
+    if (!this.drive) {
+      throw new Error('Not authenticated. Please complete OAuth flow first.');
+    }
+
+    try {
+      const response = await this.drive.files.get({
+        fileId: fileId,
+        alt: 'media',
+      }, { responseType: 'stream' });
+
+      const dir = path.dirname(destinationPath);
+      await fs.mkdir(dir, { recursive: true });
+
+      return new Promise((resolve, reject) => {
+        const dest = createWriteStream(destinationPath);
+        
+        response.data
+          .on('end', () => {
+            console.log(`File downloaded successfully to: ${destinationPath}`);
+            resolve(destinationPath);
+          })
+          .on('error', (err: any) => {
+            reject(new Error(`Download stream error: ${err.message}`));
+          })
+          .pipe(dest)
+          .on('error', (err: any) => {
+            reject(new Error(`Write stream error: ${err.message}`));
+          });
+      });
+    } catch (error: any) {
+      throw new Error(`Failed to download file from Google Drive: ${error.message}`);
+    }
+  }
+
+  async listFiles(): Promise<any[]> {
+    if (!this.drive) {
+      throw new Error('Not authenticated. Please complete OAuth flow first.');
+    }
+
+    try {
+      const query = this.folderId 
+        ? `'${this.folderId}' in parents and trashed=false`
+        : 'trashed=false';
+
+      const response = await this.drive.files.list({
+        q: query,
+        fields: 'files(id, name, size, mimeType, modifiedTime, createdTime)',
+        orderBy: 'modifiedTime desc',
+        pageSize: 100,
+      });
+
+      return response.data.files || [];
+    } catch (error: any) {
+      throw new Error(`Failed to list files from Google Drive: ${error.message}`);
+    }
   }
 }

@@ -5,11 +5,11 @@ const { createWriteStream } = require('fs');
 const path = require('path');
 
 export class ZipHandler {
-  async extractZip(zipPath, extractPath) {
+  async extractZip(zipPath: string, extractPath: string): Promise<any[]> {
     return new Promise((resolve, reject) => {
-      const extractedFiles = [];
+      const extractedFiles: any[] = [];
       
-      yauzl.open(zipPath, { lazyEntries: true }, async (err, zipfile) => {
+      yauzl.open(zipPath, { lazyEntries: true }, async (err: any, zipfile: any) => {
         if (err) {
           reject(new Error(`Failed to open zip file: ${err.message}`));
           return;
@@ -21,7 +21,6 @@ export class ZipHandler {
         }
 
         try {
-          // Ensure extract directory exists
           await fs.mkdir(extractPath, { recursive: true });
           zipfile.readEntry();
         } catch (error) {
@@ -29,7 +28,7 @@ export class ZipHandler {
           return;
         }
 
-        zipfile.on('entry', (entry) => {
+        zipfile.on('entry', (entry: any) => {
           console.log(`📄 Found entry: ${entry.fileName}`);
           
           // Skip directories
@@ -47,23 +46,22 @@ export class ZipHandler {
             return;
           }
 
-          // Accept multiple file types: CSV, Excel, TSV, TXT
+          // Accept multiple file types
           const supportedExtensions = ['.csv', '.xlsx', '.xls', '.tsv', '.txt'];
           const fileExtension = path.extname(entry.fileName).toLowerCase();
           
           if (!supportedExtensions.includes(fileExtension)) {
-            console.log(`⏭️ Skipping unsupported file type: ${entry.fileName} (${fileExtension})`);
+            console.log(`⏭️ Skipping unsupported file: ${entry.fileName} (${fileExtension})`);
             zipfile.readEntry();
             return;
           }
 
-          console.log(`✅ Processing supported file: ${entry.fileName}`);
+          console.log(`✅ Processing: ${entry.fileName}`);
 
-          // Get just the filename without path to avoid directory traversal
           const safeFileName = path.basename(entry.fileName);
           const outputPath = path.join(extractPath, safeFileName);
 
-          zipfile.openReadStream(entry, (err, readStream) => {
+          zipfile.openReadStream(entry, (err: any, readStream: any) => {
             if (err) {
               reject(new Error(`Failed to open read stream for ${entry.fileName}: ${err.message}`));
               return;
@@ -91,12 +89,12 @@ export class ZipHandler {
               zipfile.readEntry();
             });
 
-            readStream.on('error', (error) => {
+            readStream.on('error', (error: any) => {
               writeStream.destroy();
               reject(new Error(`Read stream error for ${entry.fileName}: ${error.message}`));
             });
 
-            writeStream.on('error', (error) => {
+            writeStream.on('error', (error: any) => {
               readStream.destroy();
               reject(new Error(`Write stream error for ${outputPath}: ${error.message}`));
             });
@@ -110,7 +108,7 @@ export class ZipHandler {
           resolve(extractedFiles);
         });
 
-        zipfile.on('error', (error) => {
+        zipfile.on('error', (error: any) => {
           reject(new Error(`Zip file error: ${error.message}`));
         });
       });
