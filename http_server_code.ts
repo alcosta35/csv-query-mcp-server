@@ -160,6 +160,28 @@ class HTTPMCPServer {
           name: 'list_loaded_data',
           description: 'List all currently loaded data tables and their schemas',
           inputSchema: { type: 'object', properties: {} }
+        },
+        {
+          name: 'write_csv_to_drive',
+          description: 'Write data as CSV file to Google Drive',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              data: { 
+                type: 'array', 
+                description: 'Array of objects to write as CSV' 
+              },
+              filename: { 
+                type: 'string', 
+                description: 'Name for the CSV file (without .csv extension)' 
+              },
+              tableName: {
+                type: 'string',
+                description: 'Optional: name of loaded table to export'
+              }
+            },
+            required: ['filename']
+          }
         }
       ]
     };
@@ -175,6 +197,8 @@ class HTTPMCPServer {
         return await this.handleListFiles();
       case 'query_data':
         return await this.handleQueryData(args.table, args.query);
+      case 'write_csv_to_drive':
+        return await this.handleWriteCSVToDrive(args.data, args.filename, args.tableName);
       case 'list_loaded_data':
         return await this.handleListLoadedData();
       default:
@@ -318,6 +342,126 @@ class HTTPMCPServer {
     } catch (error: any) {
       throw new Error(`Failed to list files: ${error.message}`);
     }
+  }
+
+  async handleWriteCSVToDrive(data: any[] | undefined, filename: string, tableName?: string) {
+    try {
+      let csvData: any[] = [];
+      
+      // Determine data source
+      if (tableName && this.loadedData.has(tableName)) {
+        console.log(`📊 Using data from loaded table: ${tableName}`);
+        const tableData = this.loadedData.get(tableName);
+        
+        if (Array.isArray(tableData)) {
+          csvData = tableData;
+        } else if (typeof tableData === 'object' && tableData !== null) {
+          // Excel file with multiple sheets - use first sheet
+          const sheetNames = Object.keys(tableData);
+          if (sheetNames.length > 0) {
+            csvData = tableData[sheetNames[0]];
+            console.log(`📊 Using first sheet: ${sheetNames[0]}`);
+          }
+        }
+      } else if (data && Array.isArray(data)) {
+        console.log(`📊 Using provided data array`);
+        csvData = data;
+      } else {
+        throw new Error('No valid data provided. Either provide data array or specify a loaded tableName.');
+      }
+
+      if (!csvData || csvData.length === 0) {
+        throw new Error('No data to write');
+      }
+
+      console.log(`📊 Preparing to write ${csvData.length} records to CSV`);
+
+      // Convert data to CSV format
+      const csvContent = this.convertToCSV(csvData);
+      
+      // Create temporary file
+      const tempDir = '/tmp';
+      const tempFilePath = `${tempDir}/${filename.replace(/\.csv$/, '')}.csv`;
+      
+      await fs.writeFile(tempFilePath, csvContent, 'utf8');
+      console.log(`📄 Created temporary CSV file: ${tempFilePath}`);
+
+      // Upload to Google Drive
+      const fileId = await this.driveHandler.uploadFile(tempFilePath, `${filename.replace(/\.csv$/, '')}.csv`);
+      
+      // Cleanup temp file
+      try {
+        await fs.unlink(tempFilePath);
+      } catch (cleanupError) {
+        console.warn('Cleanup warning:', cleanupError);
+      }
+
+      const summary = `✅ Successfully wrote ${csvData.length} records to Google Drive\n` +
+                     `📄 File: ${filename.replace(/\.csv$/, '')}.csv\n` +
+                     `🆔 File ID: ${fileId}\n` +
+                     `📊 Columns: ${csvData.length > 0 ? Object.keys(csvData[0]).length : 0}`;
+
+      return {
+        content: [{ 
+          type: 'text', 
+          text: summary 
+        }]
+      };
+
+    } catch (error: any) {
+      console.error('Write CSV error:', error);
+      throw new Error(`Failed to write CSV: ${error.message}`);
+    }
+  }
+
+  private convertToCSV(data: any[]): string {
+    if (!data || data.length === 0) {
+      return '';
+    }
+
+    // Get all unique headers from all objects
+    const allHeaders = new Set<string>();
+    data.forEach(row => {
+      if (row && typeof row === 'object') {
+        Object.keys(row).forEach(key => allHeaders.add(key));
+      }
+    });
+
+    const headers = Array.from(allHeaders);
+    
+    // Create CSV content
+    const csvRows: string[] = [];
+    
+    // Add header row
+    csvRows.push(headers.map(header => this.escapeCSVField(header)).join(','));
+    
+    // Add data rows
+    data.forEach(row => {
+      if (row && typeof row === 'object') {
+        const csvRow = headers.map(header => {
+          const value = row[header];
+          return this.escapeCSVField(value);
+        });
+        csvRows.push(csvRow.join(','));
+      }
+    });
+
+    return csvRows.join('\n');
+  }
+
+  private escapeCSVField(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    const stringValue = String(value);
+    
+    // If the value contains comma, quote, or newline, wrap in quotes and escape internal quotes
+    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    
+    return stringValue;
   }
 
   async handleListLoadedData() {
