@@ -20,7 +20,9 @@ export class ExcelParser {
         type: 'buffer',
         cellText: false,
         cellDates: true,
-        dateNF: 'yyyy-mm-dd'
+        dateNF: 'yyyy-mm-dd',
+        cellNF: false,
+        cellStyles: false
       });
       
       console.log(`📋 Found ${workbook.SheetNames.length} sheets: ${workbook.SheetNames.join(', ')}`);
@@ -32,10 +34,18 @@ export class ExcelParser {
         console.log(`📄 Processing sheet: ${sheetName}`);
         
         const worksheet = workbook.Sheets[sheetName];
+        
+        // Get the range of the worksheet
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+        console.log(`📊 Sheet range: ${worksheet['!ref'] || 'A1:A1'}`);
+        
+        // Convert to JSON with proper options
         const jsonData = XLSX.utils.sheet_to_json(worksheet, {
           header: 1,
           defval: null,
-          blankrows: false
+          blankrows: false,
+          raw: false,
+          dateNF: 'yyyy-mm-dd'
         });
         
         if (jsonData.length === 0) {
@@ -43,30 +53,66 @@ export class ExcelParser {
           continue;
         }
         
+        // Get headers from first row
         const headers = jsonData[0] as any[];
-        const rows = jsonData.slice(1);
+        const dataRows = jsonData.slice(1);
         
-        const processedData = rows.map(row => {
-          const obj: any = {};
-          headers.forEach((header, index) => {
-            const cleanHeader = String(header || `column_${index}`)
-              .trim()
-              .toLowerCase()
-              .replace(/\s+/g, '_')
-              .replace(/[^\w_]/g, '');
-            
-            obj[cleanHeader] = (row as any[])[index] || null;
+        console.log(`📊 Sheet ${sheetName}: ${headers.length} columns, ${dataRows.length} data rows`);
+        
+        // Convert to objects with clean headers
+        const processedData = dataRows
+          .filter(row => row && row.some(cell => cell !== null && cell !== undefined && cell !== ''))
+          .map((row: any[], index: number) => {
+            const obj: any = {};
+            headers.forEach((header, colIndex) => {
+              const cleanHeader = String(header || `column_${colIndex}`)
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, '_')
+                .replace(/[^\w_]/g, '')
+                .replace(/^_+|_+$/g, '') // Remove leading/trailing underscores
+                .replace(/_+/g, '_'); // Replace multiple underscores with single
+              
+              let cellValue = (row as any[])[colIndex];
+              
+              // Handle different data types
+              if (cellValue === null || cellValue === undefined || cellValue === '') {
+                cellValue = null;
+              } else if (typeof cellValue === 'string') {
+                cellValue = cellValue.trim();
+                if (cellValue === '') {
+                  cellValue = null;
+                }
+              } else if (typeof cellValue === 'number') {
+                // Keep as number
+              } else if (cellValue instanceof Date) {
+                cellValue = cellValue.toISOString().split('T')[0];
+              }
+              
+              obj[cleanHeader || `column_${colIndex}`] = cellValue;
+            });
+            return obj;
           });
-          return obj;
-        });
         
         allSheets[sheetName] = processedData;
         totalRows += processedData.length;
         
         console.log(`✅ Processed sheet ${sheetName}: ${processedData.length} rows, ${headers.length} columns`);
+        
+        // Log sample data
+        if (processedData.length > 0) {
+          console.log(`📋 Sample columns: ${Object.keys(processedData[0]).slice(0, 5).join(', ')}`);
+        }
       }
       
       console.log(`📊 Successfully processed ${Object.keys(allSheets).length} sheets with ${totalRows} total rows`);
+      
+      // If only one sheet, return the data directly as an array for easier querying
+      const sheetNames = Object.keys(allSheets);
+      if (sheetNames.length === 1) {
+        console.log(`📊 Single sheet detected, returning data as array`);
+        return allSheets[sheetNames[0]];
+      }
       
       return allSheets;
       
