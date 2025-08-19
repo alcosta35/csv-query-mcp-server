@@ -61,7 +61,11 @@ export class ExcelParser {
         
         // Convert to objects with clean headers
         const processedData = dataRows
-          .filter(row => row && row.some(cell => cell !== null && cell !== undefined && cell !== ''))
+          .filter(row => {
+            // Filter out completely empty rows
+            if (!row || !Array.isArray(row)) return false;
+            return row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '');
+          })
           .map((row: any[], index: number) => {
             const obj: any = {};
             headers.forEach((header, colIndex) => {
@@ -76,11 +80,11 @@ export class ExcelParser {
               let cellValue = (row as any[])[colIndex];
               
               // Handle different data types
-              if (cellValue === null || cellValue === undefined || cellValue === '') {
+              if (cellValue === null || cellValue === undefined) {
                 cellValue = null;
               } else if (typeof cellValue === 'string') {
                 cellValue = cellValue.trim();
-                if (cellValue === '') {
+                if (cellValue === '' || cellValue.toLowerCase() === 'null') {
                   cellValue = null;
                 }
               } else if (typeof cellValue === 'number') {

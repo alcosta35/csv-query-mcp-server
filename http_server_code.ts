@@ -284,17 +284,36 @@ class HTTPMCPServer {
           if (typeof data === 'object' && !Array.isArray(data)) {
             // Excel file with multiple sheets
             let totalRecords = 0;
+            const sheetNames = Object.keys(data);
+            
+            // Store each sheet individually for querying
             for (const [sheetName, sheetData] of Object.entries(data)) {
               if (Array.isArray(sheetData)) {
                 totalRecords += sheetData.length;
                 const key = `${fileName}_${sheetName}`;
                 this.loadedData.set(key, sheetData);
+                console.log(`📊 Stored sheet: ${key} with ${sheetData.length} records`);
               }
             }
+            
+            // Also store the full Excel object
             this.loadedData.set(fileName, data);
-            results.push(`✅ ${fileName}: ${totalRecords} records (${Object.keys(data).length} sheets)`);
+            
+            // If there's a main sheet with most data, also store it with the filename
+            if (sheetNames.length > 0) {
+              const mainSheet = sheetNames.find(name => 
+                name.toLowerCase().includes(fileName.toLowerCase().replace('.xlsx', '').replace('.xls', ''))
+              ) || sheetNames[0];
+              
+              if (data[mainSheet] && Array.isArray(data[mainSheet])) {
+                this.loadedData.set(fileName.replace('.xlsx', '').replace('.xls', ''), data[mainSheet]);
+                console.log(`📊 Main sheet "${mainSheet}" also stored as: ${fileName.replace('.xlsx', '').replace('.xls', '')}`);
+              }
+            }
+            
+            results.push(`✅ ${fileName}: ${totalRecords} records (${sheetNames.length} sheets: ${sheetNames.join(', ')})`);
           } else if (Array.isArray(data)) {
-            // CSV file
+            // CSV file or single sheet Excel
             this.loadedData.set(fileName, data);
             results.push(`✅ ${fileName}: ${data.length} records`);
           } else {
@@ -347,34 +366,92 @@ class HTTPMCPServer {
   async handleWriteCSVToDrive(data: any[] | undefined, filename: string, tableName?: string) {
     try {
       let csvData: any[] = [];
+      let sourceDescription = '';
       
       // Determine data source
-      if (tableName && this.loadedData.has(tableName)) {
-        console.log(`📊 Using data from loaded table: ${tableName}`);
-        const tableData = this.loadedData.get(tableName);
+      if (tableName) {
+        console.log(`📊 Looking for table: ${tableName}`);
         
-        if (Array.isArray(tableData)) {
-          csvData = tableData;
-        } else if (typeof tableData === 'object' && tableData !== null) {
-          // Excel file with multiple sheets - use first sheet
-          const sheetNames = Object.keys(tableData);
-          if (sheetNames.length > 0) {
-            csvData = tableData[sheetNames[0]];
-            console.log(`📊 Using first sheet: ${sheetNames[0]}`);
+        // Try exact match first
+        let tableData = this.loadedData.get(tableName);
+        let actualTableName = tableName;
+        
+        if (!tableData) {
+          // Try to find by partial match or sheet name
+          const availableKeys = Array.from(this.loadedData.keys());
+          console.log(`📊 Available tables: ${availableKeys.join(', ')}`);
+          
+          // Look for sheet-specific match (filename_sheetname)
+          const sheetMatch = availableKeys.find(key => 
+            key.includes(tableName) || tableName.includes(key.split('_')[0])
+          );
+          
+          if (sheetMatch) {
+            tableData = this.loadedData.get(sheetMatch);
+            actualTableName = sheetMatch;
+            console.log(`📊 Found sheet match: ${sheetMatch}`);
+          } else {
+            // Look for base filename without extension
+            const baseName = tableName.replace('.xlsx', '').replace('.xls', '');
+            const baseMatch = availableKeys.find(key => {
+              return key === baseName || key.includes(baseName);
+            });
+            
+            if (baseMatch) {
+              tableData = this.loadedData.get(baseMatch);
+              actualTableName = baseMatch;
+              console.log(`📊 Found base match: ${baseMatch}`);
+            }
           }
+        }
+        
+        if (tableData) {
+          if (Array.isArray(tableData)) {
+            csvData = tableData;
+            sourceDescription = `from table: ${actualTableName}`;
+          } else if (typeof tableData === 'object' && tableData !== null) {
+            // Excel file with multiple sheets - use first sheet or largest sheet
+            const sheets = Object.keys(tableData);
+            console.log(`📊 Excel file has sheets: ${sheets.join(', ')}`);
+            
+            if (sheets.length === 1) {
+              csvData = tableData[sheets[0]];
+              sourceDescription = `from sheet: ${actualTableName}_${sheets[0]}`;
+            } else {
+              // Find the largest sheet
+              let largestSheet = sheets[0];
+              let maxRecords = 0;
+              
+              sheets.forEach(sheetName => {
+                const sheetData = tableData[sheetName];
+                if (Array.isArray(sheetData) && sheetData.length > maxRecords) {
+                  maxRecords = sheetData.length;
+                  largestSheet = sheetName;
+                }
+              });
+              
+              csvData = tableData[largestSheet];
+              sourceDescription = `from largest sheet: ${actualTableName}_${largestSheet}`;
+              console.log(`📊 Using largest sheet: ${largestSheet} with ${maxRecords} records`);
+            }
+          }
+        } else {
+          const availableTables = Array.from(this.loadedData.keys());
+          throw new Error(`Table '${tableName}' not found. Available: ${availableTables.join(', ')}`);
         }
       } else if (data && Array.isArray(data)) {
         console.log(`📊 Using provided data array`);
         csvData = data;
+        sourceDescription = 'from provided data array';
       } else {
         throw new Error('No valid data provided. Either provide data array or specify a loaded tableName.');
       }
 
       if (!csvData || csvData.length === 0) {
-        throw new Error('No data to write');
+        throw new Error(`No data to write ${sourceDescription}`);
       }
 
-      console.log(`📊 Preparing to write ${csvData.length} records to CSV`);
+      console.log(`📊 Preparing to write ${csvData.length} records to CSV ${sourceDescription}`);
 
       // Convert data to CSV format
       const csvContent = this.convertToCSV(csvData);
@@ -398,6 +475,7 @@ class HTTPMCPServer {
 
       const summary = `✅ Successfully wrote ${csvData.length} records to Google Drive\n` +
                      `📄 File: ${filename.replace(/\.csv$/, '')}.csv\n` +
+                     `📊 Source: ${sourceDescription}\n` +
                      `🆔 File ID: ${fileId}\n` +
                      `📊 Columns: ${csvData.length > 0 ? Object.keys(csvData[0]).length : 0}`;
 
@@ -474,11 +552,15 @@ class HTTPMCPServer {
 
       const tables = Array.from(this.loadedData.entries()).map(([name, data]) => {
         if (Array.isArray(data)) {
-          const sampleKeys = data.length > 0 ? Object.keys(data[0]) : [];
-          return `📊 ${name}: ${data.length} records, columns: ${sampleKeys.join(', ')}`;
+          const sampleKeys = data.length > 0 ? Object.keys(data[0]).slice(0, 5) : [];
+          return `📊 ${name}: ${data.length} records, columns: ${sampleKeys.join(', ')}${sampleKeys.length < Object.keys(data[0] || {}).length ? '...' : ''}`;
         } else if (typeof data === 'object' && data !== null) {
           const sheets = Object.keys(data);
-          return `📁 ${name}: Excel file with sheets: ${sheets.join(', ')}`;
+          const sheetInfo = sheets.map(sheet => {
+            const sheetData = data[sheet];
+            return `${sheet} (${Array.isArray(sheetData) ? sheetData.length : 0} records)`;
+          });
+          return `📁 ${name}: Excel file with sheets: ${sheetInfo.join(', ')}`;
         }
         return `❓ ${name}: Unknown format`;
       });
@@ -493,49 +575,124 @@ class HTTPMCPServer {
 
   async handleQueryData(tableName: string, query: string) {
     try {
-      if (!this.loadedData.has(tableName)) {
-        const availableTables = Array.from(this.loadedData.keys());
-        throw new Error(`Table '${tableName}' not found. Available: ${availableTables.join(', ')}`);
+      // First, try exact match
+      let data = this.loadedData.get(tableName);
+      let actualTableName = tableName;
+      
+      if (!data) {
+        // Try to find by partial match or sheet name
+        const availableKeys = Array.from(this.loadedData.keys());
+        
+        // Look for sheet-specific match (filename_sheetname)
+        const sheetMatch = availableKeys.find(key => 
+          key.includes(tableName) || tableName.includes(key.split('_')[0])
+        );
+        
+        if (sheetMatch) {
+          data = this.loadedData.get(sheetMatch);
+          actualTableName = sheetMatch;
+        } else {
+          // Look for base filename without extension
+          const baseMatch = availableKeys.find(key => {
+            const baseName = tableName.replace('.xlsx', '').replace('.xls', '');
+            return key === baseName || key.includes(baseName);
+          });
+          
+          if (baseMatch) {
+            data = this.loadedData.get(baseMatch);
+            actualTableName = baseMatch;
+          }
+        }
+        
+        if (!data) {
+          const availableTables = availableKeys.filter(key => 
+            this.loadedData.get(key) && Array.isArray(this.loadedData.get(key))
+          );
+          throw new Error(`Table '${tableName}' not found. Available queryable tables: ${availableTables.join(', ')}`);
+        }
       }
-
-      const data = this.loadedData.get(tableName);
+      
+      // If data is an Excel object with multiple sheets, try to get the main sheet
+      if (typeof data === 'object' && !Array.isArray(data)) {
+        const sheets = Object.keys(data);
+        if (sheets.length === 1) {
+          data = data[sheets[0]];
+          actualTableName = `${actualTableName}_${sheets[0]}`;
+        } else {
+          // Multiple sheets - suggest specific sheet names
+          const sheetOptions = sheets.map(sheet => `${tableName}_${sheet}`);
+          throw new Error(`Table '${tableName}' has multiple sheets. Please specify: ${sheetOptions.join(', ')}`);
+        }
+      }
       
       if (!Array.isArray(data)) {
-        throw new Error(`Table '${tableName}' is not queryable (might be an Excel file with multiple sheets)`);
+        throw new Error(`Table '${actualTableName}' is not queryable. Data type: ${typeof data}`);
       }
 
-      // Simple query processing (you can enhance this)
+      // Simple query processing
       let result = data;
       const lowerQuery = query.toLowerCase();
 
       // Basic filtering examples
       if (lowerQuery.includes('count') || lowerQuery.includes('total')) {
         return {
-          content: [{ type: 'text', text: `Total records in ${tableName}: ${data.length}` }]
+          content: [{ type: 'text', text: `Total records in ${actualTableName}: ${data.length}` }]
         };
       }
 
       if (lowerQuery.includes('columns') || lowerQuery.includes('fields')) {
         const columns = data.length > 0 ? Object.keys(data[0]) : [];
         return {
-          content: [{ type: 'text', text: `Columns in ${tableName}: ${columns.join(', ')}` }]
+          content: [{ type: 'text', text: `Columns in ${actualTableName}: ${columns.join(', ')}` }]
         };
       }
 
       if (lowerQuery.includes('sample') || lowerQuery.includes('first')) {
         const sample = data.slice(0, 5);
         return {
-          content: [{ type: 'text', text: `Sample data from ${tableName}:\n${JSON.stringify(sample, null, 2)}` }]
+          content: [{ type: 'text', text: `Sample data from ${actualTableName}:\n${JSON.stringify(sample, null, 2)}` }]
+        };
+      }
+
+      // Advanced queries
+      if (lowerQuery.includes('summary') || lowerQuery.includes('describe')) {
+        const summary = this.generateDataSummary(data, actualTableName);
+        return {
+          content: [{ type: 'text', text: summary }]
         };
       }
 
       return {
-        content: [{ type: 'text', text: `Query processed for ${tableName}. Use more specific queries like 'count', 'columns', or 'sample'.` }]
+        content: [{ type: 'text', text: `Query processed for ${actualTableName} (${data.length} records). Use queries like 'count', 'columns', 'sample', or 'summary' for more specific results.` }]
       };
       
     } catch (error: any) {
       throw new Error(`Query failed: ${error.message}`);
     }
+  }
+
+  private generateDataSummary(data: any[], tableName: string): string {
+    if (!data || data.length === 0) {
+      return `Table ${tableName} is empty.`;
+    }
+
+    const columns = Object.keys(data[0]);
+    const summary = [`📊 Summary for ${tableName}:`, `Records: ${data.length}`, `Columns: ${columns.length}`];
+    
+    // Analyze each column
+    columns.slice(0, 10).forEach(col => { // Limit to first 10 columns
+      const values = data.map(row => row[col]).filter(val => val !== null && val !== undefined && val !== '');
+      const uniqueCount = new Set(values).size;
+      const nullCount = data.length - values.length;
+      
+      summary.push(`  • ${col}: ${uniqueCount} unique values, ${nullCount} nulls`);
+    });
+
+    if (columns.length > 10) {
+      summary.push(`  ... and ${columns.length - 10} more columns`);
+    }
+
+    return summary.join('\n');
   }
 
   async start() {
