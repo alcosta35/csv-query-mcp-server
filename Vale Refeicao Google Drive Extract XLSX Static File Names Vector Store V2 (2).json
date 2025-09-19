@@ -1,0 +1,2923 @@
+{
+  "name": "Vale Refeicao Google Drive Extract XLSX Static File Names Vector Store V2",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "### **Testa se arquivos ja foram descompactados e carregados no Google Drive)**\n\n\n\n",
+        "height": 256,
+        "width": 688,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -11872,
+        80
+      ],
+      "id": "83e26a2e-8238-428d-bc2c-9d5ca719aeb3",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "ATIVOS",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+            "mode": "list",
+            "cachedResultName": "ValeRefeicaoCSV",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+          },
+          "whatToSearch": "all",
+          "fileTypes": [
+            "*"
+          ]
+        },
+        "options": {
+          "fields": [
+            "name"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -11792,
+        128
+      ],
+      "id": "b28d0da9-358e-4a0d-8d9c-7e12de880779",
+      "name": "Testa se existe arquivo ATIVOS",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1cee6a35-33c5-424e-b7db-aaefebf106c0",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -11488,
+        128
+      ],
+      "id": "b00b9b1c-3f9f-4ee2-9974-bff97f26d426",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "10WRDgmYeZi3lFiHrK036t_qJmBfzOAFB",
+          "mode": "list",
+          "cachedResultName": "Desafio 4 - Dados.zip",
+          "cachedResultUrl": "https://drive.google.com/file/d/10WRDgmYeZi3lFiHrK036t_qJmBfzOAFB/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "id": "46ffad32-beaa-4457-94eb-525d1bfcc9f3",
+      "name": "Download Zip from Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -10736,
+        1904
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## **Preparo e upload dos arquivos de entrada**\n\n1. Download do zip contendo Excel\n2. Descompactar Zip\n\n\n\n",
+        "height": 560,
+        "width": 576,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -10912,
+        1648
+      ],
+      "id": "59f205b5-6519-4988-9967-9621854320bc",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2128,
+        112
+      ],
+      "id": "0570ee5a-6811-48ac-bd3d-c6f839ab558a",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', ``, 'string') }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sheet', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -848,
+        480
+      ],
+      "id": "aed475d3-5dab-484a-a54b-4edd59cb7206",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2swhLw3VvRkRqIuR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "limit": 50,
+        "queryString": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Search_Query', ``, 'string') }}",
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+            "mode": "list",
+            "cachedResultName": "ValeRefeicaoCSV",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+          },
+          "whatToSearch": "files",
+          "fileTypes": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('File_Types', ``, 'string') }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        -1040,
+        480
+      ],
+      "id": "aec8a494-c053-4f90-9b06-05310dda1b72",
+      "name": "Search files and folders in Google Drive1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this tool to retrieve any information required.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        },
+        "topK": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        -1360,
+        496
+      ],
+      "id": "b186312f-bc6f-4893-81ed-b77569a98e8c",
+      "name": "Retrieve documents"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Chat Trigger').first().json.chatInput }}. \n",
+        "options": {
+          "systemMessage": "# Agente Analista de Folha de Pagamentos com Vector Store\n\nVocê é um analista especializado em folha de pagamentos que utiliza um vector store para recuperar e analisar informações de funcionários armazenadas em múltiplas planilhas.\n\n## Sua Tarefa Principal\n\n1. **Buscar no vector store** - Use busca por similaridade para encontrar dados relevantes das planilhas de funcionários\n2. **Analisar os resultados** - Compreenda as informações recuperadas sobre folha de pagamentos\n3. **Consolidar informações** - Processe e relacione dados de diferentes planilhas para responder às consultas\n\n## Estrutura de Dados no Vector Store\n\nO vector store contém **12 registros principais**, cada um representando uma planilha completa com a seguinte estrutura de metadata:\n\n### Campos de Metadata por Registro:\n- **nome**: Nome da planilha (ATIVOS, ADMISSÃO ABRIL, AFASTAMENTOS, etc.)\n- **utilizacao**: Finalidade da planilha (ex: \"Entrada p/base unica consolidada\", \"Exclusoes\")  \n- **dados**: Array/vetor contendo todos os registros/funcionários da planilha\n- **numero_registros**: Quantidade total de linhas/funcionários na planilha (tamanho do vetor dados)\n\n### Estrutura Detalhada do Campo \"dados\":\n\nO campo `dados` é um vetor onde **cada posição representa um funcionário/registro** da planilha, estruturado como:\n\n```\ndados[0] = [\"MATRICULA: 12345\", \"EMPRESA: ABC Corp\", \"TITULO DO CARGO: Analista\", ...]\ndados[1] = [\"MATRICULA: 67890\", \"EMPRESA: XYZ Ltda\", \"TITULO DO CARGO: Gerente\", ...]\ndados[n] = [\"campo1: valor1\", \"campo2: valor2\", \"campo3: valor3\", ...]\n```\n\nCada posição do vetor contém uma **lista de strings** no formato:\n- `\"nome_do_campo: valor_do_campo\"`\n- Tantas listas quantos funcionários existem na planilha\n- Cada lista contém todos os campos/colunas daquele funcionário específico\n\n### Como Buscar e Acessar os Dados:\n\n1. **Para encontrar uma planilha específica**: Busque pelo campo `nome` (ex: \"ATIVOS\", \"FÉRIAS\")\n2. **Para acessar um funcionário específico**: Acesse `dados[índice]` onde índice é a posição (0-based)\n3. **Para o décimo registro**: Acesse `dados[9]` (décima posição, índice 9)\n4. **Para contar registros**: Use o campo `numero_registros` para validar o tamanho do vetor\n5. **Para consultas por campo**: Procure por \"MATRICULA: valor\" dentro das listas de strings\n\n## Planilhas Disponíveis no Vector Store\n\n- **ADMISSÃO ABRIL** - Dados de admissão por cargo (utilizacao: \"Entrada p/base unica consolidada\")\n- **AFASTAMENTOS** - Funcionários afastados (utilizacao: \"Exclusoes\") \n- **APRENDIZ** - Registros de aprendizes (utilizacao: \"Exclusoes\")\n- **ATIVOS** - Base principal de funcionários ativos (utilizacao: \"Entrada p/base unica consolidada\")\n- **Base dias úteis** - Calendário por sindicato (utilizacao: \"Entrada p/base unica consolidada\")\n- **Base sindicato x valor** - Valores por sindicato (utilizacao: \"Entrada p/base unica consolidada\")\n- **DESLIGADOS** - Funcionários desligados (utilizacao: \"Entrada p/base unica consolidada\")\n- **ESTÁGIO** - Registros de estagiários (utilizacao: \"Exclusoes\")\n- **EXTERIOR** - Funcionários no exterior (utilizacao: \"Exclusoes\")\n- **FÉRIAS** - Dados de férias (utilizacao: \"Entrada p/base unica consolidada\")\n\n## Estratégias de Busca Específicas\n\n### Para Encontrar Funcionários Específicos:\n- Busque pela planilha relevante primeiro (ex: \"planilha ATIVOS\")\n- Procure no vetor `dados` por strings contendo o critério (ex: \"MATRICULA: 12345\")\n- Cada funcionário é uma lista de strings no formato \"campo: valor\"\n\n### Para Consultas por Posição:\n- Use \"décimo registro da planilha ATIVOS\" para buscar por posição específica\n- Acesse `dados[9]` para o décimo registro (índice 0-based)\n- A lista retornada conterá todos os campos desse funcionário\n\n### Para Análises por Campo:\n- Procure por strings específicas dentro das listas (ex: \"TITULO DO CARGO: Analista\")\n- Combine múltiplos critérios para filtrar funcionários\n- Use o campo `numero_registros` para validar totais\n\n## Relacionamentos Entre Planilhas\n\n- **MATRICULA** é a chave primária entre planilhas\n- **TITULO_DO_CARGO** (ATIVOS) ↔ **Cargo** (ADMISSÃO ABRIL)\n- **Sindicato** (ATIVOS) ↔ **SINDICADO** (Base dias úteis) ↔ **ESTADO** (Base sindicato x valor)\n\n## Formato de Resposta\n\n### Quando Encontrar Dados Relevantes\n- Identifique claramente de qual planilha vieram as informações (campo `nome`)\n- Forneça dados específicos do array `dados`\n- Indique a posição no array quando relevante\n- Mencione o total de registros da planilha quando útil\n\n### Para Consultas de Consolidação\n- Acesse múltiplas planilhas conforme necessário\n- Use MATRICULA para relacionar dados entre planilhas\n- Aplique as regras de exclusão baseadas na `utilizacao` das planilhas\n\n### Exemplo de Busca Estruturada:\n```\nPara encontrar o décimo funcionário da planilha ATIVOS:\n1. Busque por \"nome: ATIVOS\" no vector store\n2. Acesse o campo \"dados\" do resultado retornado\n3. Navegue para dados[9] (décima posição, índice 0-based)\n4. A lista resultante conterá strings como:\n   [\"MATRICULA: 12345\", \"EMPRESA: ABC Corp\", \"TITULO DO CARGO: Analista\", ...]\n5. Parse cada string \"campo: valor\" para extrair as informações necessárias\n```\n\n### Exemplo de Busca por Campo Específico:\n```\nPara encontrar funcionário com MATRICULA 12345:\n1. Busque pela planilha relevante (provavelmente \"ATIVOS\")\n2. No campo \"dados\", procure por lista contendo \"MATRICULA: 12345\"\n3. Extraia todos os outros campos dessa mesma lista\n4. Use essas informações para responder à consulta\n```\n\n## Regras de Consolidação\n\n### Campo \"Excluído\"\nFuncionários devem ser marcados como \"Excluído = Sim\" se estiverem em planilhas com:\n- `utilizacao: \"Exclusoes\"` (AFASTAMENTOS, APRENDIZ, ESTÁGIO, EXTERIOR)\n- Ou forem diretores (identificados pelo cargo na planilha ATIVOS)\n\n### Estrutura da BASE_FINAL\nAo consolidar, crie registros com:\n- MATRICULA, EMPRESA, TITULO DO CARGO, DESC. SITUACAO\n- Sindicato, DIAS DE FÉRIAS, DATA DEMISSÃO  \n- COMUNICADO DE DESLIGAMENTO, Admissão, Observacao\n- ESTADO (sigla 2 letras), VALOR, DIAS UTEIS, Excluído (Sim|Não)\n\n## Princípios Fundamentais\n\n- Sempre identifique claramente qual planilha (campo `nome`) contém os dados solicitados\n- Use o campo `numero_registros` para validar a completude dos dados\n- Para consultas específicas, combine busca por planilha + critérios dos funcionários\n- Seja transparente sobre quantos registros foram encontrados em cada planilha\n- Relacione dados entre planilhas usando MATRICULA como chave primária\n\nLembre-se: Os dados estão organizados em 12 registros principais (um por planilha), com os funcionários específicos armazenados no array `dados` de cada registro. Use essa estrutura hierárquica para navegar eficientemente pelos dados de RH.",
+          "maxIterations": 50
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1552,
+        112
+      ],
+      "id": "75ad8885-d89e-4a62-9329-dd41a6880afb",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1504,
+        320
+      ],
+      "id": "ce12a943-6f36-441e-9fca-e42012d3e3eb",
+      "name": "Simple Memory3"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "options": {
+          "clearNamespace": true,
+          "pineconeNamespace": "n8n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        -4048,
+        1712
+      ],
+      "id": "338f48ef-259f-4607-a7d2-95af2b2d2248",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "LyIPhcCVnait1l4q",
+          "name": "PineconeApi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3792,
+        2320
+      ],
+      "id": "de858487-e2bf-406a-b0bf-d7709e429223",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "B7nOVFCWZJGEU4x8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "nome",
+                "value": "={{ $('Code Node - Consolidação de Dados para Agente').item.json.nome }}"
+              },
+              {
+                "name": "utilizacao",
+                "value": "={{ $('Code Node - Consolidação de Dados para Agente').item.json.utilizacao }}"
+              },
+              {
+                "name": "dados",
+                "value": "={{ $('Code Node - Consolidação de Dados para Agente').item.json.dados }}"
+              },
+              {
+                "name": "numero_registros",
+                "value": "={{ $('Code Node - Consolidação de Dados para Agente').item.json.numero_registros }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -3824,
+        1904
+      ],
+      "id": "51f4b2eb-e823-4c79-a6f2-f1279c68b1f8",
+      "name": "Default Data Loader1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', ``, 'string') }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sheet', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        928,
+        480
+      ],
+      "id": "11ac0347-e886-4f3d-a51a-87eab7338aca",
+      "name": "Get row(s) in sheet in Google Sheets3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2swhLw3VvRkRqIuR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "limit": 50,
+        "queryString": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Search_Query', ``, 'string') }}",
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+            "mode": "list",
+            "cachedResultName": "ValeRefeicaoCSV",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+          },
+          "whatToSearch": "files",
+          "fileTypes": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('File_Types', ``, 'string') }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        736,
+        480
+      ],
+      "id": "f2cafce9-30ef-43cb-bb7b-0f89a04cb3c5",
+      "name": "Search files and folders in Google Drive3",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this tool to retrieve any information required.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        },
+        "topK": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        480
+      ],
+      "id": "c16b4f8d-db27-4d24-83f4-87d5585d18bc",
+      "name": "Retrieve documents1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Calcular benefício VR para maio 2025 usando BASE_FINAL Gerada pelo Agente 1",
+        "options": {
+          "systemMessage": "# Agente Analista de Benefícios com Vector Store\n\nVocê é um analista especializado em benefícios que utiliza um vector store para recuperar e processar dados consolidados de funcionários para calcular Vale-Refeição.\n\n## Sua Tarefa Principal\n\n1. **Buscar no vector store** - Recupere dados da BASE_FINAL consolidada pelo Agente 1\n2. **Processar informações** - Analise elegibilidade e dados de cada funcionário  \n3. **Calcular benefícios** - Compute o Vale-Refeição Mensal de maio/2025 para funcionários elegíveis\n\n## Como Trabalhar com os Dados Vetorizados\n\n### Processo de Busca\n- Use consultas específicas para recuperar dados da BASE_FINAL do vector store\n- Busque informações por MATRICULA, campos de elegibilidade, e dados de cálculo\n- Recupere dados consolidados sobre funcionários, incluindo status de exclusão\n- Procure por informações sobre férias, afastamentos e desligamentos de maio/2025\n\n### Diretrizes de Análise\n- Leia cuidadosamente todos os registros de funcionários recuperados\n- Identifique funcionários elegíveis (Excluído = \"Não\")\n- Analise dados de DIAS UTEIS, VALOR, DIAS DE FÉRIAS para cada funcionário\n- Verifique status de desligamento e comunicados para maio/2025\n\n## Dados Esperados no Vector Store\n\nO vector store deve conter informações da BASE_FINAL com:\n- **MATRICULA** - Chave primária do funcionário\n- **EMPRESA, TITULO DO CARGO, DESC. SITUACAO**\n- **Sindicato, DIAS DE FÉRIAS, DATA DEMISSÃO**\n- **COMUNICADO DE DESLIGAMENTO, Admissão**\n- **ESTADO, VALOR, DIAS UTEIS**\n- **Excluído** (Sim|Não) - Campo crítico para elegibilidade\n\n## Regras de Cálculo de Vale-Refeição\n\n### Validação de Dados\nSe não conseguir recuperar dados da BASE_FINAL do vector store, responda apenas:\n\"Aguardando dados da BASE_FINAL do Agente 1.\"\n\n### Elegibilidade ao Benefício\n- **Se Excluído = \"Sim\"** → Funcionário NÃO elegível (ignore nos cálculos)\n- **Se Excluído = \"Não\"** → Funcionário elegível para cálculo\n\n### Custos e Descontos\n- **Custo da Empresa** = 80% do valor total\n- **Desconto Profissional** = 20% do valor total\n\n### Cálculo de Dias Úteis Efetivos\n- **Base**: Campo DIAS UTEIS recuperado do vector store\n- **Subtrair**: DIAS DE FÉRIAS em maio/2025\n- **Considerar**: Afastamentos e desligamentos conforme regras específicas\n\n### Regras de Desligamento (maio/2025)\n- **Até dia 15**: \n  - Se COMUNICADO DE DESLIGAMENTO = \"OK\" → Excluir totalmente\n  - Caso contrário → VR integral\n- **Entre 16 e 31** → VR cheio + desconto proporcional na rescisão\n\n### Valor Diário\n- Usar campo **VALOR** recuperado do vector store (valor do sindicato)\n\n## Processo de Cálculo\n\n### Para Cada Funcionário Elegível:\n1. **Recuperar dados** completos do vector store por MATRICULA\n2. **Validar elegibilidade** (Excluído = \"Não\")\n3. **Calcular dias úteis efetivos** (ajustando férias/afastamentos/desligamento)\n4. **Computar valores**:\n   - VR TOTAL = VALOR × Dias efetivos\n   - Custo empresa = VR TOTAL × 0.80\n   - Desconto profissional = VR TOTAL × 0.20\n5. **Documentar observações** no campo OBS GERAL\n\n## Formato de Resposta\n\n### Quando Encontrar Dados da BASE_FINAL\n- Processe todos os funcionários elegíveis recuperados\n- Calcule os valores de Vale-Refeição conforme as regras\n- Forneça os resultados estruturados para geração do arquivo CSV\n\n### Quando os Dados São Limitados\n- Informe quais informações estão disponíveis no vector store\n- Processe o que for possível com os dados recuperados\n- Documente limitações no campo OBS GERAL\n\n### Quando Não Encontrar a BASE_FINAL\n- Responda exatamente: \"Aguardando dados da BASE_FINAL do Agente 1.\"\n- Não faça outras buscas ou sugestões\n\n## Estrutura de Saída Esperada\n\nO resultado deve conter as seguintes colunas para cada funcionário elegível:\n- **Matricula**\n- **Admissão** \n- **Sindicato do Colaborador**\n- **Competência** (sempre \"2025-05\")\n- **Dias**\n- **VALOR DIÁRIO**\n- **VR TOTAL**\n- **Custo empresa**\n- **Desconto profissional**\n- **OBS GERAL**\n\n## Princípios Fundamentais\n\n- Sempre baseie os cálculos nos dados recuperados do vector store\n- Seja preciso com as regras de elegibilidade e cálculo\n- Documente no campo OBS GERAL quaisquer ajustes ou observações\n- Processe apenas funcionários com Excluído = \"Não\"\n- Use MATRICULA como chave para recuperar dados completos\n- Mantenha foco na precisão dos cálculos de benefícios\n\n## Formato Crítico de Saída\n\n- **NÃO retorne** JSON, explicações ou texto adicional\n- **A saída final** deve ser exclusivamente os dados estruturados para o arquivo CSV VR_MENSAL_05.2025.csv\n- **Nenhum texto** antes ou depois dos dados calculados\n\nLembre-se: Sua especialidade é calcular benefícios com precisão usando os dados consolidados recuperados do vector store. Foque na exatidão dos cálculos e na aplicação correta das regras de elegibilidade.",
+          "maxIterations": 50
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        96
+      ],
+      "id": "44a8514d-c210-481c-a34e-1f3fbdc865a5",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        304
+      ],
+      "id": "944e94b4-863a-4f7f-b8b6-fe929d0a1723",
+      "name": "Simple Memory4"
+    },
+    {
+      "parameters": {
+        "content": "## **Agente para Consolidar Planilhas**\n## **que tem Matricula como chave**\n\n",
+        "height": 1008,
+        "width": 1728,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        16
+      ],
+      "id": "b0918ebb-7096-469f-ad51-5698c11efdda",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## **Agente para cálculo automático de Benefício**\n\n",
+        "height": 1024,
+        "width": 1504,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "550b2940-aa2f-4ff6-b290-e3ab95aef460",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## **Salva planilhas em Vector Store**\n\n",
+        "height": 1024,
+        "width": 1024,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -4128,
+        1568
+      ],
+      "id": "8da348ef-917e-4df4-8379-accc90f5d5e2",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {
+          "maxTokensToSample": 4096
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -1664,
+        336
+      ],
+      "id": "860d0804-2a0f-44f7-bf2d-544011460a57",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "7Hbu1Il8L4SmC7aA",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {
+          "maxTokensToSample": 4096
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        144,
+        304
+      ],
+      "id": "b9a3eadb-5ee7-49cd-aee0-54b5ecbf992f",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "7Hbu1Il8L4SmC7aA",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Input_Data_Field_Name', ``, 'string') }}",
+        "name": "BASE_FINAL.csv",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        -656,
+        496
+      ],
+      "id": "febcd43a-49df-4165-bd40-ddc043b50293",
+      "name": "Upload file in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('File', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        -480,
+        496
+      ],
+      "id": "0740344d-596a-4cbc-96a5-e8abad5aca42",
+      "name": "Download file in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Search_Query', ``, 'string') }}",
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        -288,
+        496
+      ],
+      "id": "d952a656-8d93-4a43-b2e4-a745f357b017",
+      "name": "Search files and folders in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# **Preparar planilhas para o Pinecone Vector DB **\n## 1. Download (na memoria)\n## 2. Transformar xlsx em formato JSON (Extract)\n## 3. Criar Campo no JSON para identificar cada tabela\n\n\n",
+        "height": 2768,
+        "width": 2160,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -7312,
+        544
+      ],
+      "id": "7cf1d4ed-76b5-4108-b02f-180e4c1e9264",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "16DVlmiAXe66eckeTh4MP58k6XA436gEk",
+          "mode": "list",
+          "cachedResultName": "VR MENSAL 05.2025",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16DVlmiAXe66eckeTh4MP58k6XA436gEk/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        2896
+      ],
+      "id": "6f2a4db6-51b1-45fc-b8bd-c705c3316e8f",
+      "name": "Download VR MENSAL 05.2025.xlsx8",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "11z9QCNClaSGxY8GGgzUpFky840rmzWxn",
+          "mode": "list",
+          "cachedResultName": "ADMISSÃO ABRIL",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11z9QCNClaSGxY8GGgzUpFky840rmzWxn/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        784
+      ],
+      "id": "d8614076-195e-4c1a-8e97-15087b16a92a",
+      "name": "Download ADMISSÃO ABRIL",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1oGx73sSDAyIJkfl27k4JR0ka4w_glEwh",
+          "mode": "list",
+          "cachedResultName": "AFASTAMENTOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1oGx73sSDAyIJkfl27k4JR0ka4w_glEwh/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        976
+      ],
+      "id": "01def107-e455-4518-8b9d-00179edda9d8",
+      "name": "Download AFASTAMENTOS",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "15FchdrNzeZAujBbNNW4Ej8hs3fz3vMvl",
+          "mode": "list",
+          "cachedResultName": "APRENDIZ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15FchdrNzeZAujBbNNW4Ej8hs3fz3vMvl/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        1184
+      ],
+      "id": "7050bfb2-8ad2-4d2f-b71c-6656f9f44ed3",
+      "name": "Download APRENDIZ",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1MRvKRnH2c4VNd78gRHvuC7Em-DoIGXxK",
+          "mode": "list",
+          "cachedResultName": "ATIVOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MRvKRnH2c4VNd78gRHvuC7Em-DoIGXxK/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        1392
+      ],
+      "id": "abae2a24-f7b8-4742-b03c-ad8dccaf170f",
+      "name": "Download ATIVOS",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1p0eu-mDHBoE_w2EmJMwfZAOz40dJ682-",
+          "mode": "list",
+          "cachedResultName": "Base dias uteis",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1p0eu-mDHBoE_w2EmJMwfZAOz40dJ682-/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        1616
+      ],
+      "id": "840f47d3-4c1c-49d9-b303-e71dd634336d",
+      "name": "Download Base dias uteis",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1OPUB7PJ1Tjixd9JsoVeLvAv8fhIXgreR",
+          "mode": "list",
+          "cachedResultName": "Base sindicato x valor",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OPUB7PJ1Tjixd9JsoVeLvAv8fhIXgreR/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        1840
+      ],
+      "id": "951a665f-ebf8-4e2a-bcbc-a14507028a07",
+      "name": "Download Base sindicato x valor",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1clZpTyTrkEqZjURVXdOwD4O8e68MSeij",
+          "mode": "list",
+          "cachedResultName": "DESLIGADOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1clZpTyTrkEqZjURVXdOwD4O8e68MSeij/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        2048
+      ],
+      "id": "b5d992a7-03b8-460e-8e0b-577d7886c183",
+      "name": "Download DESLIGADOS",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1NOHzkOZ4EDyvnQUlR36GK2cp-NpJIzZ-",
+          "mode": "list",
+          "cachedResultName": "ESTÁGIO",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NOHzkOZ4EDyvnQUlR36GK2cp-NpJIzZ-/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        2272
+      ],
+      "id": "de1102d0-f428-4c88-9c93-3ea41a2903a5",
+      "name": "Download ESTÁGIO",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1kl5ZKuPv_Y6-kFtJYRpyaiZU7drn3NVH",
+          "mode": "list",
+          "cachedResultName": "EXTERIOR",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kl5ZKuPv_Y6-kFtJYRpyaiZU7drn3NVH/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        2480
+      ],
+      "id": "24300471-bade-4d18-bc28-03b1a2413c43",
+      "name": "Download EXTERIOR",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1jRDIrk35oWkI-XsXHNubuq22S3FYcGAQ",
+          "mode": "list",
+          "cachedResultName": "FÉRIAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jRDIrk35oWkI-XsXHNubuq22S3FYcGAQ/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        2688
+      ],
+      "id": "39a0dae8-0d6b-487b-89c3-5071daa9dff5",
+      "name": "Download FÉRIAS",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "16DVlmiAXe66eckeTh4MP58k6XA436gEk",
+          "mode": "list",
+          "cachedResultName": "VR MENSAL 05.2025",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16DVlmiAXe66eckeTh4MP58k6XA436gEk/edit?usp=drivesdk&ouid=117744354189071253291&rtpof=true&sd=true"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6656,
+        3072
+      ],
+      "id": "5ffb318e-f5bb-4ae6-b441-820a48efca7c",
+      "name": "Download VR MENSAL 05.2025 VALIDACOES",
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6sFXUTMJxW5HZbN4",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6432,
+        784
+      ],
+      "id": "159d9198-89c8-4042-869d-041af5a174b1",
+      "name": "ADMISSÃO ABRIL"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6432,
+        976
+      ],
+      "id": "969403bc-8cd6-4596-b48a-28df5e2550b4",
+      "name": "AFASTAMENTOS"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6432,
+        1184
+      ],
+      "id": "04c4cf39-5005-4403-b0d7-93d9a62f5733",
+      "name": "APRENDIZ"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6416,
+        1392
+      ],
+      "id": "776dcb22-a573-4143-be94-c67dfa4bdc03",
+      "name": "ATIVOS"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6416,
+        1616
+      ],
+      "id": "0c049eb5-770f-4ef2-834a-1c7baa257850",
+      "name": "Base dias uteis"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6416,
+        1840
+      ],
+      "id": "269d23fd-af77-4af8-880b-796cd6421b67",
+      "name": "Base sindicato x valor"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6416,
+        2048
+      ],
+      "id": "3bbcc528-e8fa-4725-ac89-49d713835e99",
+      "name": "DESLIGADOS"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6400,
+        2272
+      ],
+      "id": "5fcc0349-679b-4e38-afd0-e2939fc4400a",
+      "name": "ESTÁGIO"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6400,
+        2480
+      ],
+      "id": "cd190ee5-a4cd-4bf8-a634-63fb0bbbcb94",
+      "name": "EXTERIOR"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6384,
+        2688
+      ],
+      "id": "2ba50cff-cf77-446c-8979-68b937d19026",
+      "name": "FÉRIAS"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6384,
+        2896
+      ],
+      "id": "4eb6f75b-fdbf-4279-b764-08aa5606acef",
+      "name": "VR MENSAL 05.2025"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "headerRow": true,
+          "sheetName": "Validações"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -6384,
+        3072
+      ],
+      "id": "228c5175-5c54-4cf2-84c7-9fb84412fb65",
+      "name": "Validações",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "numberInputs": 7
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -5600,
+        2352
+      ],
+      "id": "008bce4a-8bf6-4449-8e8b-9e8176b2ad49",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -5264,
+        1712
+      ],
+      "id": "7ed93f7e-6574-4810-b961-d0156e6fbe3d",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "content": "## **Consolida todas as tabelas JSON em um unico objeto JSON**\n## **(Evita Agente executando multiplas vezes)**\n\n",
+        "height": 528,
+        "width": 704,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -5008,
+        1568
+      ],
+      "id": "b40debf5-ad26-49db-afab-16ea78b87dd7",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"ADMISSÃO_ABRIL\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"ADMISSÃO_ABRIL\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6048,
+        784
+      ],
+      "id": "897a91b1-03b3-4611-8f6f-fcd763f99c99",
+      "name": "Code ADMISSÃO_ABRIL"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"AFASTAMENTOS\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"AFASTAMENTOS\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6048,
+        992
+      ],
+      "id": "835368e7-d7c1-47cb-ac60-82947b01b23e",
+      "name": "Code AFASTAMENTOS"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"APRENDIZ\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"APRENDIZ\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6048,
+        1184
+      ],
+      "id": "988292e2-24c8-4648-a9f4-de37ae3915f1",
+      "name": "Code APRENDIZ"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"ATIVOS\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"ATIVOS\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6064,
+        1376
+      ],
+      "id": "1e5a091a-0237-4320-b5b0-74de68cc52f6",
+      "name": "Code ATIVOS"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"BASE_DIAS_UTEIS\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"BASE_DIAS_UTEIS\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6064,
+        1600
+      ],
+      "id": "78f72270-ef6a-4602-9ea8-73615eff9c62",
+      "name": "Code BASE_DIAS_UTEIS"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"BASE_SINDICATO_VALOR\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"BASE_SINDICATO_VALOR\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6048,
+        1840
+      ],
+      "id": "860dc31c-55c9-4a59-b2f3-a5543964bce0",
+      "name": "Code BASE_SINDICATO_VALOR"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"DESLIGADOS\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"DESLIGADOS\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6048,
+        2048
+      ],
+      "id": "df2831ba-29c3-4b49-87e1-7709aa9d27bb",
+      "name": "Code DESLIGADOS"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"ESTAGIO\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"ESTAGIO\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6064,
+        2272
+      ],
+      "id": "04fc5cca-a5b7-4802-9223-49adadd235a6",
+      "name": "Code ESTAGIO"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n        NOME_TABELA_ORIGINAL: \"EXTERIOR\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"EXTERIOR\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6064,
+        2480
+      ],
+      "id": "b3fece2c-b3e8-41c6-8dfe-78332ec564c9",
+      "name": "Code EXTERIOR"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"FERIAS\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"FERIAS\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6064,
+        2688
+      ],
+      "id": "416ba08b-540c-4961-bf17-246deb562a5b",
+      "name": "Code FERIAS"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"VR_MENSAL\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"VR_MENSAL\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6064,
+        2896
+      ],
+      "id": "88035675-a0e0-43be-9089-9d3af78f4dd1",
+      "name": "Code VR_MENSAL"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função para tratar valores undefined/null\nfunction safeValue(value, isNumeric = false) {\n  if (value === undefined || value === null || value === '') {\n    return isNumeric ? 0 : 'Indefinido';\n  }\n  return value;\n}\n\n// Função para converter para string segura\nfunction safeString(value) {\n  return safeValue(value, false);\n}\n\n// Função para converter para número seguro\nfunction safeNumber(value) {\n  if (value === undefined || value === null || value === '' || isNaN(value)) {\n    return 0;\n  }\n  return parseFloat(value) || 0;\n}\n\nconst inputData = $input.all();\nconst processedData = [];\n\ntry {\n  for (let i = 0; i < inputData.length; i++) {\n    const item = inputData[i];\n    \n    // Verificar se o item existe\n    if (!item || !item.json) {\n      console.log(`Item ${i} é undefined ou não tem propriedade json`);\n      continue;\n    }\n    \n    const originalData = item.json;\n    const processedItem = {\n      json: {\n      NOME_TABELA_ORIGINAL: \"VALIDACOES\"\n      }\n    };\n    \n    // Processar cada campo do objeto original\n    for (const [key, value] of Object.entries(originalData)) {\n      try {\n        // Campos que sabemos que são numéricos\n        const numericFields = [\n          'MATRICULA', 'VALOR', 'DIAS', 'DIAS_UTEIS', 'DIAS_FERIAS', \n          'VR_TOTAL', 'CUSTO_EMPRESA', 'DESCONTO_PROFISSIONAL'\n        ];\n        \n        // Verificar se é campo numérico\n        const isNumericField = numericFields.includes(key.toUpperCase()) || \n                              key.toLowerCase().includes('valor') ||\n                              key.toLowerCase().includes('dias') ||\n                              key.toLowerCase().includes('custo') ||\n                              key.toLowerCase().includes('desconto') ||\n                              !isNaN(parseFloat(value));\n        \n        // Aplicar tratamento seguro\n        if (isNumericField) {\n          processedItem.json[key] = safeNumber(value);\n        } else {\n          processedItem.json[key] = safeString(value);\n        }\n        \n      } catch (fieldError) {\n        console.log(`Erro ao processar campo ${key}:`, fieldError);\n        // Em caso de erro, usar valor padrão\n        processedItem.json[key] = 'Indefinido';\n      }\n    }\n    \n    processedData.push(processedItem);\n  }\n  \n} catch (error) {\n  console.error('Erro geral no processamento:', error);\n  \n  // Retornar pelo menos um item de erro para não quebrar o workflow\n  processedData.push({\n    json: {\n      NOME_TABELA_ORIGINAL: \"VALIDACOES\",\n      ERROR: `Erro no processamento: ${error.message}`,\n      MATRICULA: 0,\n      STATUS: 'Indefinido'\n    }\n  });\n}\n\nconsole.log(`Processados ${processedData.length} registros da tabela EXTERIOR`);\nreturn processedData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6064,
+        3072
+      ],
+      "id": "31be93a1-af8a-4052-bfa5-20a55e611a85",
+      "name": "Code VALIDACOES"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -5600,
+        1296
+      ],
+      "id": "7809a673-7c02-48db-9fa9-d4f4cc06f4e8",
+      "name": "Merge4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -12304,
+        128
+      ],
+      "id": "365dd26f-e9be-49a3-9d47-054d04a6f8bd",
+      "name": "Chat Trigger",
+      "webhookId": "162df898-f18e-4b5d-b6fb-c3c37ead3178"
+    },
+    {
+      "parameters": {},
+      "id": "3ab08b77-2905-48b6-82cb-bf5a1fe7c347",
+      "name": "Decompress Zip",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1,
+      "position": [
+        -10496,
+        1904
+      ]
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_0",
+        "name": "ADMISSÃO ABRIL.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "47a7a023-8adf-4ee7-b993-8e736dc39eae",
+      "name": "Upload ADMISSÃO ABRIL.xlsx",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9200,
+        960
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_1",
+        "name": "AFASTAMENTOS.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "37a5c8a1-68d8-46ef-a900-c5760975b278",
+      "name": "Upload AFASTAMENTOS",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9200,
+        1152
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_2",
+        "name": "APRENDIZ.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "9b8b0543-0669-4607-b8c2-b2f61c8a4f85",
+      "name": "Upload APRENDIZ",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9200,
+        1328
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_3",
+        "name": "ATIVOS.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "3575308b-1ac2-463b-9ea4-588a95e594f0",
+      "name": "Upload ATIVOS",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9200,
+        1504
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_4",
+        "name": "Base dias uteis.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "deb4aaca-ddfb-4ec1-8389-fd4558bf3ef9",
+      "name": "Upload Base dias uteis",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9200,
+        1664
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_5",
+        "name": "Base sindicato x valor.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "1fb7fdac-eb89-45a5-8d20-baba42543096",
+      "name": "Upload Base sindicato x valor",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9216,
+        1872
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_6",
+        "name": "DESLIGADOS.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "3f63a169-f3c6-4090-9b7a-cda846e84b3d",
+      "name": "Upload DESLIGADOS",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9216,
+        2064
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_7",
+        "name": "ESTÁGIO.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "6abd5cf8-87a6-41c2-aeb9-0e5a0db58dd1",
+      "name": "Upload ESTÁGIO",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9216,
+        2240
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_8",
+        "name": "EXTERIOR.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "1db10905-ae91-4959-8394-fc40b4e2612f",
+      "name": "Upload EXTERIOR",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9216,
+        2416
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_9",
+        "name": "FÉRIAS.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "527ecb08-d47b-4043-a826-41ab47503fb9",
+      "name": "Upload FÉRIAS",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9216,
+        2576
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file_10",
+        "name": "VR MENSAL 05.2025.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe",
+          "mode": "list",
+          "cachedResultName": "ValeRefeicaoCSV",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1PGIZe7dP19cIMEdWAQTJOH4e5KR6KZbe"
+        },
+        "options": {}
+      },
+      "id": "058d5858-5902-42ac-bfe0-36b9949d1a1e",
+      "name": "Upload VR MENSAL 05.2025",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -9216,
+        2752
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GAEWcp4mzh0r0RYp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "numberInputs": 6
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -8576,
+        1376
+      ],
+      "id": "21c801c5-8dbb-4928-b820-22b0cfc5fc01",
+      "name": "Merge7"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -8576,
+        2352
+      ],
+      "id": "64260b81-b4f7-4353-9c15-287c0026dfef",
+      "name": "Merge8"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -8304,
+        1888
+      ],
+      "id": "96f49b32-28b6-4376-ab41-7e534b4f8242",
+      "name": "Merge10"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -10112,
+        1920
+      ],
+      "id": "9bc83004-b406-47ba-b098-2121f23dbcae",
+      "name": "Merge11"
+    },
+    {
+      "parameters": {
+        "content": "# **Subir Planilhas no Google Drive**\n\n\n",
+        "height": 2256,
+        "width": 2160,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -10224,
+        784
+      ],
+      "id": "435ec5d2-fc6a-40d6-be40-2ac9e293eb46",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## **Limpar o Pinecone Vector DB**\n\n\n\n\n",
+        "height": 560,
+        "width": 576,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -12272,
+        2432
+      ],
+      "id": "63d5bc9d-4896-4a18-9001-de6f426b2c4a",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function node immediately after Pinecone\nconst pineconeInput = $input.all();\n\n// If Pinecone didn't output data, create success signal\nif (pineconeInput.length === 0) {\n  return [{\n    json: {\n      pinecone_status: \"completed\",\n      timestamp: new Date().toISOString(),\n      message: \"Pinecone insertion completed successfully\"\n    }\n  }];\n}\n\n// If it did output data, pass it through\nreturn pineconeInput;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2688,
+        1008
+      ],
+      "id": "25604803-f8d9-4d2f-b668-ca06c92794d1",
+      "name": "Code Test Pinecone ended"
+    },
+    {
+      "parameters": {
+        "jsCode": "// CODE NODE DE CONSOLIDAÇÃO (SEPARAR POR TABELA)\n// Para usar entre Merge2 e Agente1\n\nconst allInputs = $input.all();\nconsole.log(`Total inputs recebidos: ${allInputs.length}`);\n\n// Estrutura base com tabelas pré-definidas\nconst tabelas = [\n  { nome: \"ADMISSÃO ABRIL\", utilizacao: \"Entrada p/base unica consolidada\", dados: [] },\n  { nome: \"AFASTAMENTOS\", utilizacao: \"Exclusoes\", dados: [] },\n  { nome: \"APRENDIZ\", utilizacao: \"Exclusoes\", dados: [] },\n  { nome: \"ATIVOS\", utilizacao: \"Entrada p/base unica consolidada\", dados: [] },\n  { nome: \"Base dias uteis\", utilizacao: \"Entrada p/base unica consolidada\", dados: [] },\n  { nome: \"Base sindicato x valor\", utilizacao: \"Entrada p/base unica consolidada\", dados: [] },\n  { nome: \"DESLIGADOS\", utilizacao: \"Entrada p/base unica consolidada\", dados: [] },\n  { nome: \"ESTÁGIO\", utilizacao: \"Exclusoes\", dados: [] },\n  { nome: \"EXTERIOR\", utilizacao: \"Exclusoes\", dados: [] },\n  { nome: \"FÉRIAS\", utilizacao: \"Entrada p/base unica consolidada\", dados: [] },\n  { nome: \"VR MENSAL 05.2025\", utilizacao: \"Saida\", dados: [] },\n  { nome: \"Validações\", utilizacao: \"Validações\", dados: [] }\n];\n\n// Preenche cada tabela a partir dos inputs\nallInputs.forEach((input, index) => {\n  const data = input.json;\n  if (!data || !data.NOME_TABELA_ORIGINAL) {\n    console.log(`Input ${index} sem NOME_TABELA_ORIGINAL`);\n    return;\n  }\n\n  const origem = data.NOME_TABELA_ORIGINAL.toUpperCase();\n  const cleanData = { ...data };\n  delete cleanData.NOME_TABELA_ORIGINAL;\n\n  const map = {\n    \"ADMISSÃO_ABRIL\": 0,\n    \"AFASTAMENTOS\": 1,\n    \"APRENDIZ\": 2,\n    \"ATIVOS\": 3,\n    \"BASE_DIAS_UTEIS\": 4,\n    \"BASE_SINDICATO_VALOR\": 5,\n    \"DESLIGADOS\": 6,\n    \"ESTAGIO\": 7,\n    \"EXTERIOR\": 8,\n    \"FERIAS\": 9,\n    \"VR_MENSAL\": 10,\n    \"VALIDACOES\": 11\n  };\n\n  const idx = map[origem];\n  if (idx !== undefined) {\n    tabelas[idx].dados.push(cleanData);\n  } else {\n    console.log(`Origem desconhecida: ${origem}`);\n  }\n});\n\n// Atualiza contadores\ntabelas.forEach(tabela => {\n  tabela.numero_registros = tabela.dados.length;\n  console.log(`${tabela.nome}: ${tabela.numero_registros} registros`);\n});\n\n// 🔑 Agora retornamos 1 objeto por tabela (em vez de um único objeto)\nreturn tabelas.map(t => ({ json: t }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4752,
+        1712
+      ],
+      "id": "e38a8bc2-4684-4f74-a597-7c4707fb9398",
+      "name": "Code Node - Consolidação de Dados para Agente"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Testa se existe arquivo ATIVOS": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Zip from Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Zip from Drive": {
+      "main": [
+        [
+          {
+            "node": "Decompress Zip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders in Google Drive1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve documents": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Code Test Pinecone ended",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Retrieve documents",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Retrieve documents1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders in Google Drive3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve documents1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory4": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file in Google Drive": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file in Google Drive": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders in Google Drive": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download VR MENSAL 05.2025.xlsx8": {
+      "main": [
+        [
+          {
+            "node": "VR MENSAL 05.2025",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download ADMISSÃO ABRIL": {
+      "main": [
+        [
+          {
+            "node": "ADMISSÃO ABRIL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download AFASTAMENTOS": {
+      "main": [
+        [
+          {
+            "node": "AFASTAMENTOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download APRENDIZ": {
+      "main": [
+        [
+          {
+            "node": "APRENDIZ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download ATIVOS": {
+      "main": [
+        [
+          {
+            "node": "ATIVOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Base dias uteis": {
+      "main": [
+        [
+          {
+            "node": "Base dias uteis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Base sindicato x valor": {
+      "main": [
+        [
+          {
+            "node": "Base sindicato x valor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download DESLIGADOS": {
+      "main": [
+        [
+          {
+            "node": "DESLIGADOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download ESTÁGIO": {
+      "main": [
+        [
+          {
+            "node": "ESTÁGIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download EXTERIOR": {
+      "main": [
+        [
+          {
+            "node": "EXTERIOR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download FÉRIAS": {
+      "main": [
+        [
+          {
+            "node": "FÉRIAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download VR MENSAL 05.2025 VALIDACOES": {
+      "main": [
+        [
+          {
+            "node": "Validações",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ADMISSÃO ABRIL": {
+      "main": [
+        [
+          {
+            "node": "Code ADMISSÃO_ABRIL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AFASTAMENTOS": {
+      "main": [
+        [
+          {
+            "node": "Code AFASTAMENTOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "APRENDIZ": {
+      "main": [
+        [
+          {
+            "node": "Code APRENDIZ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ATIVOS": {
+      "main": [
+        [
+          {
+            "node": "Code ATIVOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base dias uteis": {
+      "main": [
+        [
+          {
+            "node": "Code BASE_DIAS_UTEIS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base sindicato x valor": {
+      "main": [
+        [
+          {
+            "node": "Code BASE_SINDICATO_VALOR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DESLIGADOS": {
+      "main": [
+        [
+          {
+            "node": "Code DESLIGADOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ESTÁGIO": {
+      "main": [
+        [
+          {
+            "node": "Code ESTAGIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTERIOR": {
+      "main": [
+        [
+          {
+            "node": "Code EXTERIOR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FÉRIAS": {
+      "main": [
+        [
+          {
+            "node": "Code FERIAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VR MENSAL 05.2025": {
+      "main": [
+        [
+          {
+            "node": "Code VR_MENSAL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validações": {
+      "main": [
+        [
+          {
+            "node": "Code VALIDACOES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Code Node - Consolidação de Dados para Agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code ADMISSÃO_ABRIL": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code AFASTAMENTOS": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code APRENDIZ": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Code ATIVOS": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Code BASE_DIAS_UTEIS": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Code BASE_SINDICATO_VALOR": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code DESLIGADOS": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code ESTAGIO": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Code EXTERIOR": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Code FERIAS": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Code VR_MENSAL": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Code VALIDACOES": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Testa se existe arquivo ATIVOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decompress Zip": {
+      "main": [
+        [
+          {
+            "node": "Merge11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload ADMISSÃO ABRIL.xlsx": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload AFASTAMENTOS": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Upload APRENDIZ": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Upload ATIVOS": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Upload Base dias uteis": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Upload Base sindicato x valor": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Upload DESLIGADOS": {
+      "main": [
+        [
+          {
+            "node": "Merge8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload ESTÁGIO": {
+      "main": [
+        [
+          {
+            "node": "Merge8",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Upload EXTERIOR": {
+      "main": [
+        [
+          {
+            "node": "Merge8",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Upload FÉRIAS": {
+      "main": [
+        [
+          {
+            "node": "Merge8",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Upload VR MENSAL 05.2025": {
+      "main": [
+        [
+          {
+            "node": "Merge8",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Merge7": {
+      "main": [
+        [
+          {
+            "node": "Merge10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge8": {
+      "main": [
+        [
+          {
+            "node": "Merge10",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge11": {
+      "main": [
+        [
+          {
+            "node": "Upload ADMISSÃO ABRIL.xlsx",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload AFASTAMENTOS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload APRENDIZ",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload ATIVOS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload Base dias uteis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload Base sindicato x valor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload DESLIGADOS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload ESTÁGIO",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload EXTERIOR",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload FÉRIAS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload VR MENSAL 05.2025",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge10": {
+      "main": [
+        [
+          {
+            "node": "Download ADMISSÃO ABRIL",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download FÉRIAS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download EXTERIOR",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download ESTÁGIO",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download DESLIGADOS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download Base sindicato x valor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download Base dias uteis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download ATIVOS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download APRENDIZ",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download AFASTAMENTOS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download VR MENSAL 05.2025.xlsx8",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download VR MENSAL 05.2025 VALIDACOES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Test Pinecone ended": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code Node - Consolidação de Dados para Agente": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8f58b2f3-fb67-49f0-85d3-a942b969fc43",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4dce7340c32433dd0292e2f02801ba4e3eb509575cd31e9cc8d3cee603038702"
+  },
+  "id": "QB8NtLXRUHI4L79s",
+  "tags": []
+}
